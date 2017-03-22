@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="percent-23.3.0">
+    <CLASSES>
+      <root url="file://$USER_HOME$/.android/build-cache/c9d52357b3b1e4e6739e6438bf1c53bc05257c6a/output/res" />
+      <root url="jar://$USER_HOME$/.android/build-cache/c9d52357b3b1e4e6739e6438bf1c53bc05257c6a/output/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/AppData/Local/Android/sdk/extras/android/m2repository/com/android/support/percent/23.3.0/percent-23.3.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

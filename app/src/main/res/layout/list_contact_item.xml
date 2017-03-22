@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="8dp"
+    android:paddingLeft="8dp"
+    android:paddingRight="8dp"
+    android:id="@+id/contact_container"
+    android:background="@color/white">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="H"
+        android:textSize="20sp"
+        android:background="@drawable/circle_contact_bg"
+        android:textColor="@android:color/white"
+        android:gravity="center"
+        android:id="@+id/tv_icon" />
+
+    <LinearLayout
+        android:layout_marginTop="2dp"
+        android:layout_marginLeft="16dp"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="15dp"
+        android:paddingLeft="2dp"
+        android:background="@drawable/border_bottom">
+
+        <TextView
+            android:id="@+id/tv_name"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Hazel Anne Brosas"
+            android:textSize="18sp"
+            android:layout_gravity="center_vertical"/>
+
+        <TextView
+            android:id="@+id/tv_number"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="09420992385"
+            android:fontFamily="sans-serif-light"
+            android:layout_gravity="center_vertical"/>
+
+    </LinearLayout>
+</LinearLayout>

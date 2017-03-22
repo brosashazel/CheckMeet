@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="16dp"
+    android:layout_marginTop="10dp"
+    android:layout_marginLeft="8dp"
+    android:layout_marginBottom="10dp"
+    android:layout_marginRight="10dp"
+    android:background="@drawable/background_with_shadow"
+    android:id="@+id/group_container">
+
+    <ImageView
+        android:layout_width="125dp"
+        android:layout_height="80dp"
+        android:src="@drawable/ic_groups"
+        android:layout_gravity="center"/>
+
+    <TextView
+        android:id="@+id/tv_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Group Name"
+        android:textAlignment="center"
+        android:textSize="16sp"/>
+
+    <TextView
+        android:id="@+id/tv_participants"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="5 Participants"
+        android:textAlignment="center"
+        android:fontFamily="sans-serif-light"
+        android:textSize="14sp"/>
+
+</LinearLayout>
