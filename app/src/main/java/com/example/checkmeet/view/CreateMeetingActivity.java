@@ -7,6 +7,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
+import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -43,6 +44,10 @@ import com.wdullaer.materialdatetimepicker.time.TimePickerDialog;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 
 public class CreateMeetingActivity extends AppCompatActivity implements SpectrumPalette.OnColorSelectedListener,
         View.OnClickListener,
@@ -61,7 +66,6 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
     private TextView tvDate;
     private TextView tvTimefrom;
     private TextView tvTimeto;
-    private TextView tvAddGuests;
     private TextView tv_selected_location;
     private ImageButton btnAddGuests;
     private ImageButton btnPickLocation;
@@ -77,6 +81,7 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
     private int toHour;
     private int toMinute;
     private int meetingColor;
+    private Place place;
 
     public static Typeface tf_roboto;
     private ActionBar actionBar;
@@ -105,7 +110,6 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
         tvDate = (TextView) findViewById(R.id.tv_date);
         tvTimefrom = (TextView) findViewById(R.id.tv_timefrom);
         tvTimeto = (TextView) findViewById(R.id.tv_timeto);
-        tvAddGuests = (TextView) findViewById(R.id.tv_add_guests);
         tv_selected_location = (TextView) findViewById(R.id.tv_selected_location);
 
         btnOpenFromTime = (ImageButton) findViewById(R.id.btn_open_from_time);
@@ -330,8 +334,15 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
                                 Integer.parseInt(dateParts[2])));
         meeting.setStartTime(Utils.dateStringToInteger(tvTimefrom.getText().toString()));
         meeting.setStartTime(Utils.dateStringToInteger(tvTimeto.getText().toString()));
+        //Change to shared preference shiz
+        meeting.setHostName("Nicolle Magpale");
+        meeting.setIsHost(true);
         meeting.setColor(meetingColor);
-
+        meeting.setAddress(place.getAddress()+"");
+        meeting.setLongitude(place.getLatLng().longitude);
+        meeting.setLatitude(place.getLatLng().latitude);
+        meeting.setStringParticipants("");
+        //TODO: MAKE FUNCTION TO CONSTRUCT STRING OF PARTICIPANTS.
     }
 
     @Override
@@ -339,9 +350,7 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_ADD_GUESTS) {
             Log.d(TAG, "From Add Guests");
-            ArrayList<String> guests = new ArrayList<>();
-
-            guests = data.getStringArrayListExtra(AddGuestsActivity.GUEST_LIST_TAG);
+            ArrayList<String> guests = data.getStringArrayListExtra(AddGuestsActivity.GUEST_LIST_TAG);
 
             //TODO: Make new ADAPTER FOR THIS.
             llManager = new LinearLayoutManager(this);
@@ -357,7 +366,7 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
             switch(resultCode) {
                 case RESULT_OK:
 
-                    Place place = PlacePicker.getPlace(getBaseContext(), data);
+                    place = PlacePicker.getPlace(getBaseContext(), data);
 
                     String finalAddress;
 
