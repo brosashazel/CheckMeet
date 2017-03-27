@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.v7.app.ActionBar;
@@ -17,6 +18,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
@@ -24,6 +27,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.checkmeet.R;
+import com.example.checkmeet.model.Date;
+import com.example.checkmeet.model.Meeting;
+import com.example.checkmeet.service.MeetingService;
+import com.example.checkmeet.utils.Utils;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.example.checkmeet.adapter.AddedGuestsAdapter;
@@ -48,24 +55,20 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
     public static final int REQUEST_ADD_GUESTS = 1;
     private static final int PLACE_PICKER_REQUEST = 2;
 
-
-    private RelativeLayout activityCreateMeeting;
     private EditText etMeetingName;
     private EditText etMeetingDescription;
     private SpectrumPalette palette;
-    private ImageButton btnOpenCalendar;
     private TextView tvDate;
-    private TextView tvTimeFrom;
-    private ImageButton btnOpenFromTime;
-    private TextView tvTimeTo;
-    private ImageButton btnOpenToTime;
     private TextView tvTimefrom;
     private TextView tvTimeto;
     private TextView tvAddGuests;
+    private TextView tv_selected_location;
     private ImageButton btnAddGuests;
     private ImageButton btnPickLocation;
+    private ImageButton btnOpenFromTime;
+    private ImageButton btnOpenCalendar;
+    private ImageButton btnOpenToTime;
 
-    private TextView tv_selected_location;
 
     private int timeFlag;
     private int timeFirstSet;
@@ -95,18 +98,15 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
         timeFlag = 0;
         timeFirstSet = 0;
         meetingColor = Color.rgb(255,152,0);
-        activityCreateMeeting = (RelativeLayout) findViewById(R.id.activity_create_meeting);
         etMeetingName = (EditText) findViewById(R.id.et_meeting_name);
         etMeetingDescription = (EditText) findViewById(R.id.et_meeting_description);
 
-        palette = (SpectrumPalette) findViewById(R.id.palette);
 
         tvDate = (TextView) findViewById(R.id.tv_date);
-        tvTimeFrom = (TextView) findViewById(R.id.tv_time_from);
-        tvTimeTo = (TextView) findViewById(R.id.tv_time_to);
         tvTimefrom = (TextView) findViewById(R.id.tv_timefrom);
         tvTimeto = (TextView) findViewById(R.id.tv_timeto);
         tvAddGuests = (TextView) findViewById(R.id.tv_add_guests);
+        tv_selected_location = (TextView) findViewById(R.id.tv_selected_location);
 
         btnOpenFromTime = (ImageButton) findViewById(R.id.btn_open_from_time);
         btnOpenCalendar = (ImageButton) findViewById(R.id.btn_open_calendar);
@@ -115,8 +115,7 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
         btnPickLocation = (ImageButton) findViewById(R.id.btn_pick_location_create);
 
         rvAddedGuests = (RecyclerView) findViewById(R.id.rv_added_guests);
-
-        tv_selected_location = (TextView) findViewById(R.id.tv_selected_location);
+        palette = (SpectrumPalette) findViewById(R.id.palette);
 
         actionBar = getSupportActionBar();
 
@@ -175,6 +174,13 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
 
         Log.d(TAG, "Meeting Color changed to " + String.format("#%06X", (0xFFFFFF & color)));
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(color));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(Utils.getDarkColor(color));
+        }
+
         meetingColor = color;
     }
 
@@ -230,15 +236,15 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
     public void onTimeSet(TimePickerDialog view, int hourOfDay, int minute, int second) {
 
         if (timeFlag == 0) {
-            tvTimefrom.setText(convertTimeToString(hourOfDay, minute));
+            tvTimefrom.setText(Utils.dateIntegerToString(hourOfDay*100 + minute));
             if (timeFirstSet == 0)
-                tvTimeto.setText(convertTimeToString(hourOfDay + 1, minute));
+                tvTimeto.setText(Utils.dateIntegerToString(hourOfDay*100 + minute+1));
             Log.d(TAG, "TIME: " + hourOfDay + " : " + minute);
             fromHour = hourOfDay;
             fromMinute = minute;
         } else {
             if (isTimeValid(fromHour, hourOfDay, fromMinute, minute)) {
-                tvTimeto.setText(convertTimeToString(hourOfDay, minute));
+                tvTimeto.setText(Utils.dateIntegerToString(hourOfDay*100 + minute));
                 toHour = hourOfDay;
                 toMinute = minute;
             } else {
@@ -299,13 +305,33 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
 
         switch (id) {
             case R.id.action_cancel:
+                Toast.makeText(getBaseContext(),"Creating Meeting Canceled",
+                        Toast.LENGTH_SHORT).show();
                 break;
             case R.id.action_save:
-
+                Toast.makeText(getBaseContext(),"Meeting Saved",
+                        Toast.LENGTH_SHORT).show();
+                createMeeting();
         }
 
         super.onBackPressed();
         return super.onOptionsItemSelected(item);
+    }
+
+    public void createMeeting()
+    {
+        Log.e(TAG, "Creating Meeting");
+        Meeting meeting = new Meeting();
+        String[] dateParts = tvDate.getText().toString().split("/");
+        meeting.setTitle(etMeetingName.getText().toString());
+        meeting.setDescription(etMeetingDescription.getText().toString());
+        meeting.setDate(new Date(Integer.parseInt(dateParts[0]),
+                                Integer.parseInt(dateParts[1]),
+                                Integer.parseInt(dateParts[2])));
+        meeting.setStartTime(Utils.dateStringToInteger(tvTimefrom.getText().toString()));
+        meeting.setStartTime(Utils.dateStringToInteger(tvTimeto.getText().toString()));
+        meeting.setColor(meetingColor);
+
     }
 
     @Override

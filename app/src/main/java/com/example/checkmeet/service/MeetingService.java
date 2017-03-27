@@ -4,12 +4,12 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.example.checkmeet.db.DatabaseHelper;
 import com.example.checkmeet.model.Date;
+import com.example.checkmeet.model.Group;
 import com.example.checkmeet.model.Meeting;
-import com.example.checkmeet.model.Notes;
-import com.example.checkmeet.model.Participant;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,18 +61,21 @@ public class MeetingService {
         // list of members (for view meeting)
         contentValues.put(Meeting.COL_PARTICIPANTS_STRING, meeting.getStringParticipants());
 
+        // notes
+        contentValues.put(Meeting.COL_NOTES, "");
+
         // store to DB, get ID
         long result = db.insert(Meeting.TABLE_NAME, null, contentValues);
 
         // only the host will have participants linked to the contacts app of his own phone
         if(isHost) {
             ///// meeting_participants table /////
-            List<Participant> participantList = meeting.getParticipantList();
+            List<String> participantList = meeting.getParticipantList();
             for (int i = 0; i < participantList.size(); i ++) {
                 contentValues = new ContentValues();
                 contentValues.put(Meeting.MEETING_PARTICIPANTS_COL_MEETINGID, result);
                 contentValues.put(Meeting.MEETING_PARTICIPANTS_COL_PARTICIPANTID,
-                        participantList.get(i).getParticipant_id());
+                        participantList.get(i));
 
                 db.insert(Meeting.TABLE_NAME_MEETING_PARTICIPANTS, null, contentValues);
             }
@@ -121,7 +124,7 @@ public class MeetingService {
      * Participant String format: participant1, participant2, participant3, participant4
      */
     public static void updateMeetingParticipants(Context context,
-                                                List<Participant> participantList,
+                                                List<String> participantList,
                                                  String participantString,
                                                 long meeting_id) {
 
@@ -139,7 +142,7 @@ public class MeetingService {
             contentValues = new ContentValues();
             contentValues.put(Meeting.MEETING_PARTICIPANTS_COL_MEETINGID, meeting_id);
             contentValues.put(Meeting.MEETING_PARTICIPANTS_COL_PARTICIPANTID,
-                    participantList.get(0).getParticipant_id());
+                    participantList.get(i));
 
             db.insert(Meeting.TABLE_NAME_MEETING_PARTICIPANTS, null, contentValues);
         }
@@ -173,6 +176,25 @@ public class MeetingService {
         db.close();
     }
 
+    /**
+     * Update notes of a certain meeting
+     */
+    public static void updateNotes(Context context, long meeting_id, String notes) {
+        SQLiteDatabase db = DatabaseHelper.getInstance(context).getWritableDatabase();
+
+        String selection = Meeting.COL_MEETINGID + " = ?";
+        String[] selectionArgs = {meeting_id + ""};
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(Meeting.COL_NOTES, notes);
+
+        int result = db.update(Meeting.TABLE_NAME, contentValues, selection, selectionArgs);
+
+        Log.e("MeetingService", "result = " + result);
+
+        db.close();
+    }
+
     public static int deleteMeeting(Context context, int id) {
         SQLiteDatabase db = DatabaseHelper.getInstance(context).getWritableDatabase();
 
@@ -185,9 +207,6 @@ public class MeetingService {
         ///// meeting_participants table /////
         selection = Meeting.MEETING_PARTICIPANTS_COL_MEETINGID + " = ?";
         db.delete(Meeting.TABLE_NAME_MEETING_PARTICIPANTS, selection, selectionArgs);
-
-        ///// notes table /////
-        db.delete(Notes.TABLE_NAME, selection, selectionArgs);
 
         db.close();
 
@@ -271,8 +290,13 @@ public class MeetingService {
                         cursor.getColumnIndex(Meeting.COL_DESCRIPTION)));
             }
 
+            // participants string
             meeting.setStringParticipants(
                     cursor.getString(cursor.getColumnIndex(Meeting.COL_PARTICIPANTS_STRING)));
+
+            // notes
+            meeting.setNotes(cursor.getString(cursor.getColumnIndex(Meeting.COL_NOTES)));
+
         }
 
         cursor.close();
@@ -282,7 +306,7 @@ public class MeetingService {
 
             if(meeting.getStringParticipants() == null) {
                 String[] projection = {
-                        Participant.COL_PARTICIPANTID
+                        Group.GROUP_PARTICIPANT_COL_PARTICIPANTID
                 };
 
                 selection =
@@ -295,12 +319,11 @@ public class MeetingService {
                 cursor = db.query(Meeting.TABLE_NAME_MEETING_PARTICIPANTS,
                         projection, selection, selectionArgs, null, null, null);
 
-                List<Participant> participantList = new ArrayList<>();
-                Participant p;
+                List<String> participantList = new ArrayList<>();
+                String p;
                 while(cursor.moveToNext()) {
-                    p = new Participant();
-                    p.setParticipant_id(
-                            cursor.getInt(cursor.getColumnIndex(Participant.COL_PARTICIPANTID)));
+                    p = cursor.getString(
+                            cursor.getColumnIndex(Group.GROUP_PARTICIPANT_COL_PARTICIPANTID));
 
                     participantList.add(p);
                 }

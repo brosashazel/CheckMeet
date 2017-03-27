@@ -7,12 +7,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Color;
 import android.util.Log;
 
-import com.example.checkmeet.R;
 import com.example.checkmeet.model.Date;
 import com.example.checkmeet.model.Group;
 import com.example.checkmeet.model.Meeting;
-import com.example.checkmeet.model.Notes;
-import com.example.checkmeet.model.Participant;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,18 +42,8 @@ public class DatabaseHelper extends SQLiteOpenHelper{
                     Meeting.COL_ADDRESS + " TEXT NOT NULL, " +
                     Meeting.COL_LATITUDE + " REAL NOT NULL, " +
                     Meeting.COL_LONGITUDE + " REAL NOT NULL, " +
-                    Meeting.COL_PARTICIPANTS_STRING + " TEXT NOT NULL);";
-
-    // notes
-    private static final String SQL_CREATE_NOTES_TABLE =
-            "CREATE TABLE IF NOT EXISTS " + Notes.TABLE_NAME + " ( " +
-                    Notes.COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    Notes.COL_NOTE + " TEXT NOT NULL);";
-
-    // participant
-    private static final String SQL_CREATE_PARTICIPANT_TABLE =
-            "CREATE TABLE IF NOT EXISTS " + Participant.TABLE_NAME + " ( " +
-                    Participant.COL_PARTICIPANTID + " INTEGER PRIMARY KEY);";
+                    Meeting.COL_PARTICIPANTS_STRING + " TEXT NOT NULL," +
+                    Meeting.COL_NOTES + " TEXT);";
 
     // group
     private static final String SQL_CREATE_GROUP_TABLE =
@@ -69,24 +56,18 @@ public class DatabaseHelper extends SQLiteOpenHelper{
             "CREATE TABLE IF NOT EXISTS " + Meeting.TABLE_NAME_MEETING_PARTICIPANTS + " ( " +
                     Meeting.MEETING_PARTICIPANTS_COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     Meeting.MEETING_PARTICIPANTS_COL_MEETINGID + " INTEGER NOT NULL, " +
-                    Meeting.MEETING_PARTICIPANTS_COL_PARTICIPANTID + " INTEGER NOT NULL);";
+                    Meeting.MEETING_PARTICIPANTS_COL_PARTICIPANTID + " TEXT NOT NULL);";
 
     // group_participant
     private static final String SQL_CREATE_GROUP_PARTICIPANT_TABLE =
             "CREATE TABLE IF NOT EXISTS " + Group.TABLE_NAME_GROUP_PARTICIPANT + " ( " +
                     Group.GROUP_PARTICIPANT_COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     Group.GROUP_PARTICIPANT_COL_GROUPID + " INTEGER NOT NULL, " +
-                    Group.GROUP_PARTICIPANT_COL_PARTICIPANTID + " INTEGER NOT NULL);";
+                    Group.GROUP_PARTICIPANT_COL_PARTICIPANTID + " TEXT NOT NULL);";
 
     ///// SQL DELETE TABLES /////
     private static final String SQL_DELETE_MEETING_TABLE =
             "DROP TABLE IF EXISTS " + Meeting.TABLE_NAME;
-
-    private static final String SQL_DELETE_NOTES_TABLE =
-            "DROP TABLE IF EXISTS " + Notes.TABLE_NAME;
-
-    private static final String SQL_DELETE_PARTICIPANT_TABLE =
-            "DROP TABLE IF EXISTS " + Participant.TABLE_NAME;
 
     private static final String SQL_DELETE_GROUP_TABLE =
             "DROP TABLE IF EXISTS " + Group.TABLE_NAME;
@@ -112,8 +93,6 @@ public class DatabaseHelper extends SQLiteOpenHelper{
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(SQL_CREATE_MEETING_TABLE);
-        db.execSQL(SQL_CREATE_NOTES_TABLE);
-        db.execSQL(SQL_CREATE_PARTICIPANT_TABLE);
         db.execSQL(SQL_CREATE_GROUP_TABLE);
         db.execSQL(SQL_CREATE_MEETING_PARTICIPANT_TABLE);
         db.execSQL(SQL_CREATE_GROUP_PARTICIPANT_TABLE);
@@ -124,8 +103,6 @@ public class DatabaseHelper extends SQLiteOpenHelper{
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL(SQL_DELETE_MEETING_TABLE);
-        db.execSQL(SQL_DELETE_NOTES_TABLE);
-        db.execSQL(SQL_DELETE_PARTICIPANT_TABLE);
         db.execSQL(SQL_DELETE_GROUP_TABLE);
         db.execSQL(SQL_DELETE_MEETING_PARTICIPANT_TABLE);
         db.execSQL(SQL_DELETE_GROUP_PARTICIPANT_TABLE);
@@ -133,6 +110,11 @@ public class DatabaseHelper extends SQLiteOpenHelper{
     }
 
     private void initData(SQLiteDatabase db) {
+        initMeetings(db);
+        initGroups(db);
+    }
+
+    private void initMeetings(SQLiteDatabase db) {
         List<Meeting> meetingList = new ArrayList<>();
         Meeting meeting;
         Date date;
@@ -153,6 +135,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         meeting.setColor(Color.parseColor("#ce93d8"));
         meeting.setHostName("Courtney Ngo");
         meeting.setStringParticipants(participants);
+        meeting.setNotes("Jollibee Delivery LOL NOTESSSSS");
 
         meetingList.add(meeting);
 
@@ -172,6 +155,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         meeting.setColor(Color.parseColor("#90caf9"));
         meeting.setHostName("Briane Samson");
         meeting.setStringParticipants(participants);
+        meeting.setNotes("Fifth Harmony Live in Manila NOTEEEEES");
 
         meetingList.add(meeting);
 
@@ -190,6 +174,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         meeting.setColor(Color.parseColor("#ffcc80"));
         meeting.setHostName("Roger Uy");
         meeting.setStringParticipants(participants);
+        meeting.setNotes("");
 
         meetingList.add(meeting);
 
@@ -209,6 +194,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         meeting.setColor(Color.parseColor("#a5d6a7"));
         meeting.setHostName("Tessie Limoanco");
         meeting.setStringParticipants(participants);
+        meeting.setNotes("");
 
         meetingList.add(meeting);
 
@@ -227,6 +213,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         meeting.setColor(Color.parseColor("#ffd54f"));
         meeting.setHostName("Doc Mac");
         meeting.setStringParticipants(participants);
+        meeting.setNotes("");
 
         meetingList.add(meeting);
 
@@ -265,10 +252,33 @@ public class DatabaseHelper extends SQLiteOpenHelper{
             // list of members (for view meeting)
             contentValues.put(Meeting.COL_PARTICIPANTS_STRING, meeting.getStringParticipants());
 
+            // notes
+            contentValues.put(Meeting.COL_NOTES, meeting.getNotes());
+
             // store to DB
             db.insert(Meeting.TABLE_NAME, null, contentValues);
 
             Log.e("DATABASE", "inserted --- " + meeting.getTitle());
+        }
+    }
+
+    private void initGroups(SQLiteDatabase db) {
+        String[] participant_id = {"12", "2", "26", "14", "10", "79", "41", "8", "7"};
+        String group_name = "Pretty People";
+
+        ContentValues contentValues;
+
+        contentValues = new ContentValues();
+        contentValues.put(Group.COL_NAME, group_name);
+
+        long group_id = db.insert(Group.TABLE_NAME, null, contentValues);
+
+        for (String aParticipant_id : participant_id) {
+            contentValues = new ContentValues();
+            contentValues.put(Group.GROUP_PARTICIPANT_COL_GROUPID, group_id);
+            contentValues.put(Group.GROUP_PARTICIPANT_COL_PARTICIPANTID, aParticipant_id);
+
+            db.insert(Group.TABLE_NAME_GROUP_PARTICIPANT, null, contentValues);
         }
     }
 }

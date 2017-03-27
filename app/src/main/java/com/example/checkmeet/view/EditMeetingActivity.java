@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.v4.view.MenuItemCompat;
@@ -17,6 +18,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -87,8 +90,6 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
         int meeting_id =
                 Integer.parseInt(getIntent().getStringExtra(ViewMeetingActivity.EXTRA_MEETING_ID));
         String address = getIntent().getStringExtra(ViewMeetingActivity.EXTRA_ADDRESS);
-        Log.e(TAG, "meeting_id = " + meeting_id );
-        Log.e(TAG, "meeting address = " + address );
         meeting = MeetingService.getMeeting(getBaseContext(), meeting_id);
 
         initView();
@@ -113,8 +114,6 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
         tvTimefrom = (TextView) findViewById(R.id.tv_timefrom);
         tvTimeto = (TextView) findViewById(R.id.tv_timeto);
         tvAddGuests = (TextView) findViewById(R.id.tv_add_guests);
-
-        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(meeting.getColor()));
 
         etMeetingName.setText(meeting.getTitle());
 
@@ -143,6 +142,16 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
         s.setSpan(new TypefaceSpan("fonts/rancho_regular.ttf"), 0, s.length(),
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         this.getSupportActionBar().setTitle(s);
+
+        palette.setSelectedColor(meeting.getColor());
+
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(meeting.getColor()));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(Utils.getDarkColor(meeting.getColor()));
+        }
     }
 
     @Override
@@ -198,6 +207,13 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
 
         Log.d(TAG, "Meeting Color changed to " + String.format("#%06X", (0xFFFFFF & color)));
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(color));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(Utils.getDarkColor(color));
+        }
+
         meetingColor = color;
     }
 

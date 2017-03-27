@@ -1,5 +1,6 @@
 package com.example.checkmeet.utils;
 
+import android.graphics.Color;
 import android.util.Log;
 
 import java.text.ParseException;
@@ -92,5 +93,16 @@ public class Utils {
         String month = monthIntToString(date.getMonth());
 
         return month + " " + date.getDayOfMonth() + ", " + date.getYear();
+    }
+
+    public static int getDarkColor(int fade_color) {
+        switch (fade_color) {
+            case -3238952: return Color.parseColor("#BA68C8");
+            case -7288071: return Color.parseColor("#2196F3");
+            case -13184: return Color.parseColor("#FDD835");
+            case -5908825: return Color.parseColor("#8BC34A");
+            case -10929: return Color.parseColor("#FFA000");
+            default: return Color.parseColor("#000000");
+        }
     }
 }

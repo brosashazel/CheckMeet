@@ -1,7 +1,7 @@
 package com.example.checkmeet.adapter;
 
 /**
- * Created by Hazel on 19/03/2017.
+ * Created by victo on 3/23/2017.
  */
 
 public interface ContactItemClickCallback {

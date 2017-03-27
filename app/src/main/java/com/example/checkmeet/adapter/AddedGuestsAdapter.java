@@ -33,14 +33,14 @@ public class AddedGuestsAdapter extends RecyclerView.Adapter<AddedGuestsAdapter.
     }
 
     @Override
-    public AddedGuestsAdapter.AddedGuestViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public AddedGuestViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.added_guest_item, parent, false);
-        AddedGuestsAdapter.AddedGuestViewHolder viewHolder = new AddedGuestsAdapter.AddedGuestViewHolder(view);
+        AddedGuestViewHolder viewHolder = new AddedGuestViewHolder(view);
         return viewHolder;
     }
 
     @Override
-    public void onBindViewHolder(AddedGuestsAdapter.AddedGuestViewHolder holder, int position) {
+    public void onBindViewHolder(AddedGuestViewHolder holder, int position) {
         Log.d(TAG, "on Bind View Holder");
         String guestName = addedGuestList.get(position);
         holder.bindText(guestName);

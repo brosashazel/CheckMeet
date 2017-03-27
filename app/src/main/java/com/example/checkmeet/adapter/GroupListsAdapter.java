@@ -1,7 +1,7 @@
 package com.example.checkmeet.adapter;
 
 import android.content.Context;
-import android.graphics.drawable.GradientDrawable;
+import android.database.Cursor;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,39 +12,16 @@ import android.widget.TextView;
 import com.example.checkmeet.R;
 import com.example.checkmeet.model.Group;
 
-import java.util.List;
-
 /**
  * Created by Hazel on 19/03/2017.
  */
 
-public class GroupListsAdapter extends RecyclerView.Adapter<GroupListsAdapter.GroupHolder> {
-    private List<Group> groupList;
-    private LayoutInflater inflater;
+public class GroupListsAdapter extends CursorRecyclerViewAdapter<GroupListsAdapter.GroupHolder> {
 
     private GroupItemClickCallback groupItemClickCallback;
 
-    public GroupListsAdapter(List<Group> groupList, Context context) {
-        this.groupList = groupList;
-        this.inflater = LayoutInflater.from(context);
-    }
-
-    @Override
-    public GroupHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        Log.d("GROUPS", "onCreate");
-        View v = inflater.inflate(R.layout.list_group_item, parent, false);
-        return new GroupHolder(v);
-    }
-
-    @Override
-    public void onBindViewHolder(GroupHolder holder, int position) {
-        holder.tvName.setText(groupList.get(position).getName());
-        holder.tvParticipants.setText(groupList.get(position).getParticipants().size() + " Participants");
-    }
-
-    @Override
-    public int getItemCount() {
-        return groupList.size();
+    public GroupListsAdapter(Context context, Cursor cursor) {
+        super(context, cursor);
     }
 
     public void setGroupItemClickCallback(
@@ -52,30 +29,53 @@ public class GroupListsAdapter extends RecyclerView.Adapter<GroupListsAdapter.Gr
         this.groupItemClickCallback = groupItemClickCallback;
     }
 
-    public void setItems(List<Group> groupList) {
-        this.groupList = groupList;
+    @Override
+    public void onBindViewHolder(GroupHolder viewHolder, Cursor cursor) {
+        String[] columnNames = cursor.getColumnNames();
+
+        long id = cursor.getLong(cursor.getColumnIndex(columnNames[0]));
+        String name = cursor.getString(cursor.getColumnIndex(columnNames[1]));
+        int num = cursor.getInt(cursor.getColumnIndex(columnNames[2]));
+
+        // id
+        viewHolder.group_id = id;
+
+        // name
+        viewHolder.tvName.setText(name);
+
+        // number of participants
+        viewHolder.tvNumParticipants.setText(num + "");
+    }
+
+    @Override
+    public GroupHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(
+            parent.getContext()).inflate(R.layout.list_group_item, parent, false);
+        return new GroupHolder(view);
     }
 
     class GroupHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
-        TextView tvName, tvParticipants;
+        TextView tvName;
+        TextView tvNumParticipants;
         View container;
+
+        long group_id;
 
         GroupHolder(View itemView) {
             super(itemView);
 
-            Log.d("GROUPS", "GroupHolder");
             tvName = (TextView) itemView.findViewById(R.id.tv_name);
-            tvParticipants = (TextView) itemView.findViewById(R.id.tv_participants);
+            tvNumParticipants = (TextView) itemView.findViewById(R.id.tv_num_participants);
             container = itemView.findViewById(R.id.group_container);
+
             container.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
             if(v.getId() == container.getId()) {
-                Log.e("adapter", "clicked item");
-                groupItemClickCallback.onItemClick(getAdapterPosition());
+                groupItemClickCallback.onItemClick(group_id);
             }
         }
     }

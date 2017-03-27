@@ -1,6 +1,5 @@
 package com.example.checkmeet.view;
 
-import android.content.Intent;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -8,7 +7,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 
@@ -16,6 +14,7 @@ import com.example.checkmeet.R;
 import com.example.checkmeet.adapter.ContactItemClickCallback;
 import com.example.checkmeet.adapter.ContactListsAdapter;
 import com.example.checkmeet.model.Contact;
+import com.example.checkmeet.model.Group;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +47,7 @@ public class EditGroupActivity extends AppCompatActivity implements ContactItemC
         recView.setAdapter(adapter);
         adapter.setContactItemClickCallback(this);
 
-        getSupportActionBar().setTitle(getIntent().getStringExtra(ViewGroupActivity.EXTRA_MEETING_TITLE));
+        getSupportActionBar().setTitle(getIntent().getStringExtra(Group.COL_NAME));
     }
 
     @Override

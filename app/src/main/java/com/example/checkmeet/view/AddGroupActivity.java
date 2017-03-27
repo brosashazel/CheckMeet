@@ -1,6 +1,5 @@
 package com.example.checkmeet.view;
 
-import android.content.Intent;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -8,20 +7,20 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 
 import com.example.checkmeet.R;
 import com.example.checkmeet.adapter.ContactItemClickCallback;
 import com.example.checkmeet.adapter.ContactListsAdapter;
+import com.example.checkmeet.adapter.GroupParticipantsAdapter;
 import com.example.checkmeet.model.Contact;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class AddGroupActivity extends AppCompatActivity implements ContactItemClickCallback{
+public class AddGroupActivity extends AppCompatActivity implements ContactItemClickCallback {
 
     EditText etName;
     ImageView ivAddMember;
@@ -29,7 +28,7 @@ public class AddGroupActivity extends AppCompatActivity implements ContactItemCl
     protected List<Contact> contactList;
 
     protected RecyclerView recView;
-    protected ContactListsAdapter adapter;
+    protected GroupParticipantsAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +44,7 @@ public class AddGroupActivity extends AppCompatActivity implements ContactItemCl
 
         recView = (RecyclerView) findViewById(R.id.rv_members);
 
-        adapter = new ContactListsAdapter(contactList, this);
+        adapter = new GroupParticipantsAdapter(contactList, this);
         recView.setLayoutManager(new LinearLayoutManager(this));
         recView.setAdapter(adapter);
         adapter.setContactItemClickCallback(this);
