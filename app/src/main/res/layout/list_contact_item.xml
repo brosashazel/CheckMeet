@@ -35,6 +35,7 @@
             android:layout_height="match_parent"
             android:text="Hazel Anne Brosas"
             android:textSize="18sp"
+            android:textColor="#000"
             android:layout_gravity="center_vertical"/>
 
         <TextView

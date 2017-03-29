@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.v4.view.MenuItemCompat;
@@ -17,6 +18,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -45,6 +48,7 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
 
     public static String TAG = "EditMeetingActivity";
     public static final String MEETING_COLOR = "MEETING_COLOR";
+    public static final String EXTRA_PARTICIPANT_LIST = "EXTRA_PARTICIPANT_LIST";
     public static final int REQUEST_ADD_GUESTS = 1;
     private static final int PLACE_PICKER_REQUEST = 2;
 
@@ -87,8 +91,6 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
         int meeting_id =
                 Integer.parseInt(getIntent().getStringExtra(ViewMeetingActivity.EXTRA_MEETING_ID));
         String address = getIntent().getStringExtra(ViewMeetingActivity.EXTRA_ADDRESS);
-        Log.e(TAG, "meeting_id = " + meeting_id );
-        Log.e(TAG, "meeting address = " + address );
         meeting = MeetingService.getMeeting(getBaseContext(), meeting_id);
 
         initView();
@@ -113,8 +115,6 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
         tvTimefrom = (TextView) findViewById(R.id.tv_timefrom);
         tvTimeto = (TextView) findViewById(R.id.tv_timeto);
         tvAddGuests = (TextView) findViewById(R.id.tv_add_guests);
-
-        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(meeting.getColor()));
 
         etMeetingName.setText(meeting.getTitle());
 
@@ -143,6 +143,16 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
         s.setSpan(new TypefaceSpan("fonts/rancho_regular.ttf"), 0, s.length(),
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         this.getSupportActionBar().setTitle(s);
+
+        palette.setSelectedColor(meeting.getColor());
+
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(meeting.getColor()));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(Utils.getDarkColor(meeting.getColor()));
+        }
     }
 
     @Override
@@ -198,6 +208,13 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
 
         Log.d(TAG, "Meeting Color changed to " + String.format("#%06X", (0xFFFFFF & color)));
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(color));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(Utils.getDarkColor(color));
+        }
+
         meetingColor = color;
     }
 
@@ -227,6 +244,7 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
         } else if (view.getId() == btnAddGuests.getId()) {
             Intent i = new Intent(this, AddGuestsActivity.class);
             i.putExtra(MEETING_COLOR, meetingColor);
+            i.putExtra(EXTRA_PARTICIPANT_LIST, getParticipantList());
             startActivityForResult(i, REQUEST_ADD_GUESTS);
         } else if (view.getId() == btnPickLocation.getId()) {
 
@@ -306,6 +324,16 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
         tpd.setVersion(TimePickerDialog.Version.VERSION_2);
         tpd.setAccentColor(meetingColor);
         tpd.show(getFragmentManager(), "Timepickerdialog");
+    }
+
+    private String getParticipantList() {
+        String participantList = meeting.getParticipantList().get(0);
+
+        for(int i = 0; i < meeting.getParticipantList().size(); i ++) {
+            participantList.concat(", " + meeting.getParticipantList().get(i));
+        }
+
+        return participantList;
     }
 
     @Override

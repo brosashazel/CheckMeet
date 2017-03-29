@@ -1,8 +1,8 @@
 <component name="libraryTable">
   <library name="spectrum-0.7.1">
     <CLASSES>
-      <root url="file://$USER_HOME$/.android/build-cache/9900b4d91ae8c1ffd7a00e7c4725171c58ec7de3/output/res" />
-      <root url="jar://$USER_HOME$/.android/build-cache/9900b4d91ae8c1ffd7a00e7c4725171c58ec7de3/output/jars/classes.jar!/" />
+      <root url="jar://$USER_HOME$/.android/build-cache/9dfc9563bf97ac734b9da96e43a677e84416a16d/output/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.android/build-cache/9dfc9563bf97ac734b9da96e43a677e84416a16d/output/res" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

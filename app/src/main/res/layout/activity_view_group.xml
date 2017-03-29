@@ -1,98 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     tools:context="com.example.checkmeet.view.ViewGroupActivity">
 
-    <android.support.design.widget.AppBarLayout
+    <TextView
+        android:id="@+id/tv_group_name"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:theme="@style/AppTheme.AppBarOverlay">
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:text="Group Name"
+        android:textSize="@dimen/label_size"
+        android:textColor="#000"/>
 
-            <android.support.v7.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="?attr/colorPrimaryDark"
-                app:titleTextAppearance="@style/Toolbar.TitleText"
-                app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <ImageView
-                        android:id="@+id/btn_back"
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
-                        android:src="@drawable/ic_keyboard_backspace_black_24dp"
-                        android:tint="#fefefe"/>
-
-                    <ImageView
-                        android:id="@+id/btn_delete"
-                        android:layout_width="25dp"
-                        android:layout_height="25dp"
-                        android:src="@drawable/ic_delete_black_24dp"
-                        android:tint="#fefefe"
-                        android:layout_alignParentRight="true"
-                        android:layout_marginRight="20dp"/>
-
-                    <ImageView
-                        android:id="@+id/btn_edit"
-                        android:layout_width="25dp"
-                        android:layout_height="25dp"
-                        android:src="@drawable/ic_edit_black_24dp"
-                        android:tint="#fefefe"
-                        android:layout_toLeftOf="@id/btn_delete"
-                        android:layout_marginRight="16dp"/>
-
-                </RelativeLayout>
-
-            </android.support.v7.widget.Toolbar>
-
-            <TextView
-                android:id="@+id/tv_group_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Group Name"
-                android:textSize="32sp"
-                android:layout_gravity="center"
-                android:fontFamily="sans-serif-light"
-                android:textColor="#fff"
-                android:layout_centerHorizontal="true"
-                android:layout_centerVertical="true"/>
-
-            <TextView
-                android:id="@+id/tv_num_participants"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="5 Participants"
-                android:textSize="14sp"
-                android:layout_gravity="center"
-                android:textColor="#fff"
-                android:layout_marginTop="10dp"
-                android:layout_centerHorizontal="true"
-                android:layout_below="@id/tv_group_name"/>
-        </RelativeLayout>
-    </android.support.design.widget.AppBarLayout>
-
-    <LinearLayout
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rv_members"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal">
-
-        <android.support.v7.widget.RecyclerView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/rv_participants">
-
-        </android.support.v7.widget.RecyclerView>
-    </LinearLayout>
+        android:layout_height="0dp"
+        android:padding="16dp"
+        android:layout_weight="1"/>
 
 </LinearLayout>

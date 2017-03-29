@@ -1,51 +1,69 @@
 package com.example.checkmeet.view;
 
-import android.content.Intent;
+import android.app.AlertDialog;
+import android.content.ContentResolver;
+import android.content.DialogInterface;
+import android.database.Cursor;
 import android.graphics.Color;
+import android.provider.ContactsContract;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.example.checkmeet.R;
 import com.example.checkmeet.adapter.ContactItemClickCallback;
-import com.example.checkmeet.adapter.ContactListsAdapter;
+import com.example.checkmeet.adapter.GroupParticipantsAdapter;
 import com.example.checkmeet.model.Contact;
+import com.example.checkmeet.model.Group;
+import com.example.checkmeet.service.GroupService;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class AddGroupActivity extends AppCompatActivity implements ContactItemClickCallback{
+public class AddGroupActivity extends AppCompatActivity implements ContactItemClickCallback {
 
-    EditText etName;
-    ImageView ivAddMember;
+    private static final String TAG = AddGroupActivity.class.getSimpleName();
 
-    protected List<Contact> contactList;
+    private EditText etName;
+    private RecyclerView recView;
+    private GroupParticipantsAdapter adapter;
 
-    protected RecyclerView recView;
-    protected ContactListsAdapter adapter;
+    private List<Contact> contactList;
+    private List<Integer> colors;
+
+    private List<String> participant_id_list;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_group);
 
-        etName = (EditText) findViewById(R.id.et_group_name);
-        ivAddMember = (ImageView) findViewById(R.id.iv_add);
-
         getSupportActionBar().setTitle("Create Group");
+
+        // set up data
+        contactList = new ArrayList<>();
+        participant_id_list = new ArrayList<>();
+        colors = new ArrayList<>();
+        colors.add(Color.parseColor("#ce93d8"));
+        colors.add(Color.parseColor("#90caf9"));
+        colors.add(Color.parseColor("#ffcc80"));
+        colors.add(Color.parseColor("#a5d6a7"));
+        colors.add(Color.parseColor("#ffd54f"));
 
         initData();
 
+        // set up views
         recView = (RecyclerView) findViewById(R.id.rv_members);
+        etName = (EditText) findViewById(R.id.et_group_name);
 
-        adapter = new ContactListsAdapter(contactList, this);
+        adapter = new GroupParticipantsAdapter(contactList, this);
         recView.setLayoutManager(new LinearLayoutManager(this));
         recView.setAdapter(adapter);
         adapter.setContactItemClickCallback(this);
@@ -65,40 +83,147 @@ public class AddGroupActivity extends AppCompatActivity implements ContactItemCl
 
         switch (id) {
             case R.id.action_cancel:
+                showAlert();
                 break;
             case R.id.action_save:
-
+                save();
+                break;
         }
-
-        super.onBackPressed();
         return super.onOptionsItemSelected(item);
     }
 
     private void initData() {
-        this.contactList = new ArrayList<>();
-
-        List<Integer> colors = new ArrayList<>();
-        colors.add(Color.parseColor("#ce93d8"));
-        colors.add(Color.parseColor("#90caf9"));
-        colors.add(Color.parseColor("#ffcc80"));
-        colors.add(Color.parseColor("#a5d6a7"));
-        colors.add(Color.parseColor("#ffd54f"));
+        contactList.clear();
 
         Random rand = new Random();
         Contact c;
 
-        c = new Contact("Hazel Anne Brosas", "09111111111", colors.get(rand.nextInt(5)));
-        contactList.add(c);
-        c = new Contact("Nicolle Magpale", "09999999999", colors.get(rand.nextInt(5)));
-        contactList.add(c);
-        c = new Contact("Maria Victoria Reccion", "09222222222", colors.get(rand.nextInt(5)));
-        contactList.add(c);
-        c = new Contact("Courtney Anne Ngo", "09777777777", colors.get(rand.nextInt(5)));
-        contactList.add(c);
+        ContentResolver cr = getBaseContext().getContentResolver();
+        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
+                null, null, null, ContactsContract.Contacts.DISPLAY_NAME);
+
+        if (cur != null && cur.getCount() > 0) {
+            while (cur.moveToNext()) {
+
+                c = new Contact();
+
+                String id = cur.getString(
+                        cur.getColumnIndex(ContactsContract.Contacts._ID));
+                String name = cur.getString(cur.getColumnIndex(
+                        ContactsContract.Contacts.DISPLAY_NAME));
+
+                c.setContactID(id);
+                c.setName(name);
+                c.setColor(colors.get(rand.nextInt(5)));
+                c.setSelected(false);
+
+                if (cur.getInt(cur.getColumnIndex(
+                        ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0) {
+                    Cursor pCur = cr.query(
+                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                            null,
+                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID +" = ?",
+                            new String[]{id}, null);
+                    if (pCur != null && pCur.moveToFirst()) {
+                        String phoneNo = pCur.getString(pCur.getColumnIndex(
+                                ContactsContract.CommonDataKinds.Phone.NUMBER));
+
+                        Log.e(TAG, "Name: " + name
+                                + ", Phone No: " + phoneNo + "\t\tID: " + id);
+
+                        c.setNumber(phoneNo);
+
+                        pCur.close();
+                    }
+                }
+
+                contactList.add(c);
+            }
+
+            cur.close();
+        }
+    }
+
+    private void showAlert() {
+        // show alert
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+
+        // set title
+        alertDialogBuilder.setTitle("Save your changes?");
+
+        // set dialog message
+        alertDialogBuilder
+                .setCancelable(true)
+                .setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        save();
+                    }
+                })
+                .setNegativeButton("Discard", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // if this button is clicked, close
+                        // current activity
+                        finish();
+                    }
+                })
+                .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        dialog.cancel();
+                    }
+                });
+
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+
+        // show it
+        alertDialog.show();
+    }
+
+    private void save() {
+
+        String group_name = etName.getText().toString();
+
+        if(group_name.isEmpty()) {
+            etName.setError("Please input group name!");
+        } else if(participant_id_list.size() <= 1) {
+            AlertDialog.Builder alert = new AlertDialog.Builder(this);
+            alert.setTitle("Sorry! Your group must have more than one member.");
+            alert.setPositiveButton("OK", null);
+            alert.show();
+        } else {
+
+            Group group = new Group();
+            group.setName(group_name);
+            group.setMemberList(participant_id_list);
+
+            GroupService.createGroup(getBaseContext(), group);
+
+            Toast.makeText(AddGroupActivity.this,
+                    "Saving changes...", Toast.LENGTH_SHORT).show();
+
+            finish();
+        }
+
     }
 
     @Override
     public void onItemClick(int p) {
+        Contact c = contactList.get(p);
 
+        // update data
+        c.setSelected(!c.isSelected());
+
+        if(c.isSelected()) {
+            // add to participant_id_list
+            participant_id_list.add(c.getContactID());
+        } else {
+            // remove from participant_id_list
+            participant_id_list.remove(c.getContactID());
+        }
+
+        // pass new data to adapter and update
+        adapter.setItems(contactList);
+        adapter.notifyItemChanged(p);
     }
 }

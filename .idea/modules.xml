@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/CheckMeet.iml" filepath="$PROJECT_DIR$/CheckMeet.iml" />
+      <module fileurl="file://$PROJECT_DIR$/MobapdeCheckMeet.iml" filepath="$PROJECT_DIR$/MobapdeCheckMeet.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

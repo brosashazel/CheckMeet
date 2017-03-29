@@ -5,5 +5,5 @@ package com.example.checkmeet.adapter;
  */
 
 public interface GroupItemClickCallback {
-    void onItemClick(int p);
+    void onItemClick(long group_id);
 }

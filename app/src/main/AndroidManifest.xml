@@ -9,6 +9,7 @@
     -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
 
     <application
         android:allowBackup="true"
@@ -32,7 +33,7 @@
              Note that the API key is linked to the encryption key used to sign the APK.
              You need a different API key for each encryption key, including the release key that is used to
              sign the APK for publishing.
-             You can define the keys for the debug and release targets in src/debug/ and src/release/. 
+             You can define the keys for the debug and release targets in src/debug/ and src/release/.
         -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
@@ -51,15 +52,10 @@
         <activity
             android:name=".view.EditMeetingActivity"
             android:windowSoftInputMode="stateHidden" />
-        <activity
-            android:name=".view.ViewGroupActivity"
-            android:theme="@style/AppTheme.NoActionBar"/>
-        <activity
-            android:name=".view.AddGroupActivity" />
-        <activity
-            android:name=".view.EditGroupActivity" />
-        <activity android:name=".view.AddGuestActivity" />
-        <activity android:name=".view.OpenNotesActivity"/>
+        <activity android:name=".view.AddGroupActivity" />
+        <activity android:name=".view.EditGroupActivity" />
+        <activity android:name=".view.OpenNotesActivity" />
+        <activity android:name=".view.ViewGroupActivity"/>
     </application>
 
 </manifest>

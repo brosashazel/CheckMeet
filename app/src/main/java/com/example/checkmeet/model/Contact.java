@@ -5,9 +5,12 @@ package com.example.checkmeet.model;
  */
 
 public class Contact {
+    private String contactID;
     private String name;
     private String number;
     private int color;
+
+    private boolean selected;
 
     public Contact() {
     }
@@ -40,5 +43,21 @@ public class Contact {
 
     public void setNumber(String number) {
         this.number = number;
+    }
+
+    public String getContactID() {
+        return contactID;
+    }
+
+    public void setContactID(String contactID) {
+        this.contactID = contactID;
+    }
+
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
     }
 }

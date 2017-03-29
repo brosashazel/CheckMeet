@@ -24,6 +24,7 @@ public class Meeting {
     public static final String COL_LATITUDE = "latitude";
     public static final String COL_LONGITUDE = "longitude";
     public static final String COL_PARTICIPANTS_STRING = "string_participants";
+    public static final String COL_NOTES = "notes";
 
     public static final String TABLE_NAME_MEETING_PARTICIPANTS = "meeting_participant";
     public static final String MEETING_PARTICIPANTS_COL_ID = "_id";
@@ -45,11 +46,12 @@ public class Meeting {
     private int color;
     private boolean isHost;
     private String host_name;
-    private List<Participant> participantList;
+    private List<String> participantList;
     private String address;
     private double latitude;
     private double longitude;
     private String stringParticipants;
+    private String notes;
 
     public String getTitle() {
         return title;
@@ -107,11 +109,11 @@ public class Meeting {
         this.endTime = endTime;
     }
 
-    public List<Participant> getParticipantList() {
+    public List<String> getParticipantList() {
         return participantList;
     }
 
-    public void setParticipantList(List<Participant> participantList) {
+    public void setParticipantList(List<String> participantList) {
         this.participantList = participantList;
     }
 
@@ -149,6 +151,14 @@ public class Meeting {
 
     public String getHostName() {
         return host_name;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 
     public void setHostName(String host_name) {

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingTop="8dp"
@@ -9,26 +8,18 @@
     android:paddingLeft="8dp"
     tools:context="com.example.checkmeet.view.ViewAllGroupsFragment">
 
-    <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/swipeRefreshLayout_all"
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rv_all_groups"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"/>
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/rv_all_groups"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+    <TextView
+        android:id="@+id/tv_no_groups_found"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="@string/no_groups_found"
+        android:gravity="center"
+        android:textSize="24sp"
+        android:visibility="gone"/>
 
-        <TextView
-            android:id="@+id/tv_no_groups_found"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/no_groups_found"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:textSize="24sp"
-            android:visibility="gone"/>
-
-    </android.support.v4.widget.SwipeRefreshLayout>
-
-</LinearLayout>
+</FrameLayout>
