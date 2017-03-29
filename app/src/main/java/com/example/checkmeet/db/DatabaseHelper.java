@@ -111,7 +111,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
 
     private void initData(SQLiteDatabase db) {
         initMeetings(db);
-        initGroups(db);
+        //initGroups(db);
     }
 
     private void initMeetings(SQLiteDatabase db) {

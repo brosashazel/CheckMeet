@@ -1,6 +1,9 @@
 package com.example.checkmeet.view;
 
+import android.app.AlertDialog;
 import android.content.ContentResolver;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.provider.ContactsContract;
@@ -13,6 +16,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.checkmeet.R;
 import com.example.checkmeet.adapter.ContactListsAdapter;
@@ -34,6 +38,7 @@ public class ViewGroupActivity extends AppCompatActivity {
 
     private Group group;
     private List<Contact> contactList;
+    private List<String> participant_id_list;
     private List<Integer> colors;
 
     @Override
@@ -46,11 +51,8 @@ public class ViewGroupActivity extends AppCompatActivity {
 
         // get group from db
         if(group_id != -1) {
-            group = GroupService.getGroup(getBaseContext(), (int) group_id);
+            group = GroupService.getGroup(getBaseContext(), group_id);
         }
-
-        // get contacts
-        initData();
 
         // set up views
         rv_members = (RecyclerView) findViewById(R.id.rv_members);
@@ -70,6 +72,20 @@ public class ViewGroupActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+
+        // get group from db
+        group = GroupService.getGroup(getBaseContext(), group.getId());
+
+        initData();
+        adapter.setItems(contactList);
+        adapter.notifyDataSetChanged();
+
+        tv_group_name.setText(group.getName());
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.edit_delete_menu, menu);
@@ -83,8 +99,12 @@ public class ViewGroupActivity extends AppCompatActivity {
 
         switch(id) {
             case R.id.action_edit:
+                Intent intent_edit = new Intent(this, EditGroupActivity.class);
+                intent_edit.putExtra(Group.COL_GROUPID, group.getId());
+                startActivity(intent_edit);
                 break;
             case R.id.action_delete:
+                showAlert();
                 break;
             default:
                 super.onBackPressed();
@@ -96,6 +116,7 @@ public class ViewGroupActivity extends AppCompatActivity {
     private void initData() {
 
         contactList = new ArrayList<>();
+        participant_id_list = new ArrayList<>();
         colors = new ArrayList<>();
         colors.add(Color.parseColor("#ce93d8"));
         colors.add(Color.parseColor("#90caf9"));
@@ -105,14 +126,25 @@ public class ViewGroupActivity extends AppCompatActivity {
 
         // get details of participants from default contacts app
         Random rand = new Random();
+        boolean isContactFound;
+        int counter = 0;
 
         for(int i = 0; i < group.getMemberList().size(); i ++) {
-            findContact(group.getMemberList().get(i), colors.get(rand.nextInt(5)));
+            isContactFound =
+                    findContact(group.getMemberList().get(i), colors.get(rand.nextInt(5)));
+
+            if(!isContactFound) counter++;
         }
 
-    }
+        if(counter > 0) {
+            showErrorContacts();
 
-    private void findContact(String member_id, int color) {
+            // must update db
+            group.setMemberList(participant_id_list);
+            GroupService.updateGroup(getBaseContext(), group);
+        }
+
+    }  private boolean findContact(String member_id, int color) {
 
         ContentResolver cr = getBaseContext().getContentResolver();
         Contact c;
@@ -134,6 +166,7 @@ public class ViewGroupActivity extends AppCompatActivity {
                 String name = cur.getString(cur.getColumnIndex(
                         ContactsContract.Contacts.DISPLAY_NAME));
 
+                c.setContactID(id);
                 c.setName(name);
                 c.setColor(color);
 
@@ -158,10 +191,68 @@ public class ViewGroupActivity extends AppCompatActivity {
                 }
 
                 contactList.add(c);
+                participant_id_list.add(c.getContactID());
             }
 
             cur.close();
+            return true;
 
         }
+
+        return false;
+    }
+
+
+
+    private void showAlert() {
+        // show alert
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+
+        // set title
+        alertDialogBuilder.setTitle("Are you sure you want to delete " + group.getName() + "?");
+
+        // set dialog message
+        alertDialogBuilder
+                .setCancelable(true)
+                .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // delete
+                        int result = GroupService.deleteGroup(getBaseContext(), group.getId());
+
+                        if(result != -1) {
+                            Toast.makeText(ViewGroupActivity.this,
+                                    "Deleting group...", Toast.LENGTH_SHORT).show();
+                            finish();
+                        } else {
+                            Toast.makeText(ViewGroupActivity.this,
+                                    "Oops! Something went wrong!", Toast.LENGTH_SHORT).show();
+                            dialog.cancel();
+                        }
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                })
+                .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        dialog.cancel();
+                    }
+                });
+
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+
+        // show it
+        alertDialog.show();
+    }
+
+    private void showErrorContacts() {
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle("Some of the contacts have been deleted.");
+        alert.setPositiveButton("OK", null);
+        alert.show();
     }
 }

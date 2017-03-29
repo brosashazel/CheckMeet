@@ -45,15 +45,29 @@ public class GroupParticipantsAdapter extends
 
     @Override
     public void onBindViewHolder(GroupParticipantsHolder holder, final int position) {
-        holder.tvName.setText(listParticipants.get(position).getName());
-        holder.tvNumber.setText(listParticipants.get(position).getNumber());
-        holder.tvIcon.setText(listParticipants.get(position).getName().charAt(0) + "");
-        holder.iconDrawable.setColor(listParticipants.get(position).getColor());
+
+        Contact contact = listParticipants.get(position);
+
+        holder.tvName.setText(contact.getName());
+        holder.tvNumber.setText(contact.getNumber());
+        holder.tvIcon.setText(contact.getName().charAt(0) + "");
+        holder.iconDrawable.setColor(contact.getColor());
+
+        if(contact.isSelected()) {
+            holder.iv_selected_contact.setImageResource(R.drawable.ic_check_box_black_24dp);
+        } else {
+            holder.iv_selected_contact.setImageResource(
+                    R.drawable.ic_check_box_outline_blank_black_24dp);
+        }
     }
 
     @Override
     public int getItemCount() {
         return listParticipants.size();
+    }
+
+    public void setItems(List<Contact> listParticipants) {
+        this.listParticipants = listParticipants;
     }
 
     class GroupParticipantsHolder extends RecyclerView.ViewHolder
@@ -71,6 +85,7 @@ public class GroupParticipantsAdapter extends
             tvIcon = (TextView) itemView.findViewById(R.id.tv_icon);
             container = itemView.findViewById(R.id.contact_container);
             iconDrawable = (GradientDrawable) tvIcon.getBackground();
+            iv_selected_contact = (ImageView) itemView.findViewById(R.id.iv_contact_select);
 
             container.setOnClickListener(this);
             iv_selected_contact.setOnClickListener(this);
@@ -78,7 +93,7 @@ public class GroupParticipantsAdapter extends
 
         @Override
         public void onClick(View v) {
-
+            contactItemClickCallback.onItemClick(getAdapterPosition());
         }
     }
 }

@@ -106,8 +106,11 @@ public class ViewAllGroupsFragment extends Fragment implements GroupItemClickCal
             recView.setVisibility(View.GONE);
             tv_no_groups_found.setVisibility(View.VISIBLE);
         } else {
+
             // will close the old cursor for you
             adapter.changeCursor(cursor);
+
+            Log.e(TAG, "item count = " + adapter.getItemCount());
 
             recView.setVisibility(View.VISIBLE);
             tv_no_groups_found.setVisibility(View.GONE);

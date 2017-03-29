@@ -54,7 +54,6 @@
             android:windowSoftInputMode="stateHidden" />
         <activity android:name=".view.AddGroupActivity" />
         <activity android:name=".view.EditGroupActivity" />
-        <activity android:name=".view.AddGuestActivity" />
         <activity android:name=".view.OpenNotesActivity" />
         <activity android:name=".view.ViewGroupActivity"/>
     </application>

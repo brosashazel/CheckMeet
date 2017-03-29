@@ -24,6 +24,8 @@ public class Group {
     private String name;
     private List<String> memberList;
     private ArrayList<Contact> participants;
+    private boolean isSelected;
+    private int numMembers;
 
     public Group() {
     }
@@ -64,5 +66,21 @@ public class Group {
 
     public void setMemberList(List<String> memberList) {
         this.memberList = memberList;
+    }
+
+    public boolean isSelected() {
+        return isSelected;
+    }
+
+    public void setSelected(boolean selected) {
+        isSelected = selected;
+    }
+
+    public int getNumMembers() {
+        return numMembers;
+    }
+
+    public void setNumMembers(int numMembers) {
+        this.numMembers = numMembers;
     }
 }

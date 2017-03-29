@@ -48,6 +48,7 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
 
     public static String TAG = "EditMeetingActivity";
     public static final String MEETING_COLOR = "MEETING_COLOR";
+    public static final String EXTRA_PARTICIPANT_LIST = "EXTRA_PARTICIPANT_LIST";
     public static final int REQUEST_ADD_GUESTS = 1;
     private static final int PLACE_PICKER_REQUEST = 2;
 
@@ -243,6 +244,7 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
         } else if (view.getId() == btnAddGuests.getId()) {
             Intent i = new Intent(this, AddGuestsActivity.class);
             i.putExtra(MEETING_COLOR, meetingColor);
+            i.putExtra(EXTRA_PARTICIPANT_LIST, getParticipantList());
             startActivityForResult(i, REQUEST_ADD_GUESTS);
         } else if (view.getId() == btnPickLocation.getId()) {
 
@@ -322,6 +324,16 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
         tpd.setVersion(TimePickerDialog.Version.VERSION_2);
         tpd.setAccentColor(meetingColor);
         tpd.show(getFragmentManager(), "Timepickerdialog");
+    }
+
+    private String getParticipantList() {
+        String participantList = meeting.getParticipantList().get(0);
+
+        for(int i = 0; i < meeting.getParticipantList().size(); i ++) {
+            participantList.concat(", " + meeting.getParticipantList().get(i));
+        }
+
+        return participantList;
     }
 
     @Override

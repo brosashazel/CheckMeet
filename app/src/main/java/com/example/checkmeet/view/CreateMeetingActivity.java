@@ -341,8 +341,8 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
         meeting.setAddress(place.getAddress()+"");
         meeting.setLongitude(place.getLatLng().longitude);
         meeting.setLatitude(place.getLatLng().latitude);
-        meeting.setStringParticipants("");
         //TODO: MAKE FUNCTION TO CONSTRUCT STRING OF PARTICIPANTS.
+        meeting.setStringParticipants("");
     }
 
     @Override

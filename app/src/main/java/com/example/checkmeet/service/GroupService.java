@@ -4,12 +4,16 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.example.checkmeet.db.DatabaseHelper;
 import com.example.checkmeet.model.Group;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static android.content.ContentValues.TAG;
+import static android.icu.lang.UCharacter.GraphemeClusterBreak.T;
 
 /**
  * Created by victo on 3/18/2017.
@@ -70,17 +74,22 @@ public class GroupService {
         String selection = Group.GROUP_PARTICIPANT_COL_GROUPID + " = ?";
         String[] selectionArgs = {group_id + ""};
 
+        Log.e("updateGroupParticipants", "group_id = " + group_id);
+
+        long result;
+
         db.delete(Group.TABLE_NAME_GROUP_PARTICIPANT, selection, selectionArgs);
 
         // add new participants
         ContentValues contentValues;
         for(int i = 0; i < participantList.size(); i ++) {
             contentValues = new ContentValues();
-            contentValues.put(Group.COL_GROUPID, group_id);
+            contentValues.put(Group.GROUP_PARTICIPANT_COL_GROUPID, group_id);
             contentValues.put(
                     Group.GROUP_PARTICIPANT_COL_PARTICIPANTID, participantList.get(i));
 
-            db.insert(Group.TABLE_NAME_GROUP_PARTICIPANT, null, contentValues);
+            result = db.insert(Group.TABLE_NAME_GROUP_PARTICIPANT, null, contentValues);
+            Log.e("inserting", result + "");
         }
     }
 
@@ -122,13 +131,61 @@ public class GroupService {
                 Group.TABLE_NAME + "." + Group.COL_GROUPID + " = " +
                 Group.TABLE_NAME_GROUP_PARTICIPANT + "." + Group.GROUP_PARTICIPANT_COL_GROUPID;
 
+        // group by
+        String groupBy = Group.TABLE_NAME + "." + Group.COL_GROUPID;
+
         // sort by name
         String orderBy = Group.COL_NAME;
 
-        return db.query(table, columns, selection, null, null, null, orderBy);
+        return db.query(table, columns, selection, null, groupBy, null, orderBy);
     }
 
-    public static Group getGroup(Context context, int group_id) {
+    public static List<Group> getAllGroupsGuests(Context context) {
+        SQLiteDatabase db = DatabaseHelper.getInstance(context).getReadableDatabase();
+
+        // id, name, and number of participants
+        String[] columns = {
+                Group.TABLE_NAME + "." + Group.COL_GROUPID,
+                Group.COL_NAME,
+                "COUNT(" + Group.GROUP_PARTICIPANT_COL_PARTICIPANTID + ")"
+        };
+
+        // table
+        String table = Group.TABLE_NAME + ", " + Group.TABLE_NAME_GROUP_PARTICIPANT;
+
+        // selection
+        String selection =
+                Group.TABLE_NAME + "." + Group.COL_GROUPID + " = " +
+                Group.TABLE_NAME_GROUP_PARTICIPANT + "." + Group.GROUP_PARTICIPANT_COL_GROUPID;
+
+        // group by
+        String groupBy = Group.TABLE_NAME + "." + Group.COL_GROUPID;
+
+        // sort by name
+        String orderBy = Group.COL_NAME;
+
+        List<Group> groupList = new ArrayList<>();
+        Group group;
+
+        Cursor cursor = db.query(table, columns, selection, null, groupBy, null, orderBy);
+
+        while(cursor.moveToNext()) {
+            group = new Group();
+            group.setId(cursor.getInt(cursor.getColumnIndex(columns[0])));
+            group.setName(cursor.getString(cursor.getColumnIndex(columns[1])));
+            group.setNumMembers(cursor.getInt(cursor.getColumnIndex(columns[2])));
+            group.setSelected(false);
+
+            groupList.add(group);
+        }
+
+        cursor.close();
+        db.close();
+
+        return groupList;
+    }
+
+    public static Group getGroup(Context context, long group_id) {
         Group group = null;
 
         SQLiteDatabase db = DatabaseHelper.getInstance(context).getReadableDatabase();
