@@ -40,6 +40,8 @@ public class AddGuestsGroupsFragment extends Fragment implements ContactItemClic
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+
+        Log.e("GROUP FRAGMENT", "GROUP FRAGMENT");
         View rootView = inflater.inflate(R.layout.fragment_add_guests_groups, container, false);
 
         initData();

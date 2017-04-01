@@ -3,6 +3,7 @@ package com.example.checkmeet.view;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.provider.ContactsContract;
 import android.support.design.widget.TabLayout;
@@ -40,6 +41,7 @@ import java.util.Set;
 public class AddGuestsActivity extends AppCompatActivity {
 
     public static final String GUEST_LIST_TAG = "GUEST_LIST_TAG";
+    public static final String GUEST_NAMES_TAG = "GUEST_NAMES_TAG";
 
     private static final String TAG = "AddGuestsActivity";
 
@@ -65,14 +67,18 @@ public class AddGuestsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_guests);
 
+        Log.e(TAG, "CREATED ACTIVITY ADD GUESTS");
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle("Add Guests");
+        setSupportActionBar(toolbar);
 
         participant_id_list = new ArrayList<>();
 
         // get participant_id_list from edit activity
         String participantList = getIntent().getStringExtra(
                 EditMeetingActivity.EXTRA_PARTICIPANT_LIST);
+
+        Log.e(TAG, participantList);
 
         // null if from CreateMeetingActivity
         if(participantList != null) {
@@ -96,9 +102,12 @@ public class AddGuestsActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
+
+        Log.e(TAG, "BEFORE inflating cancel_save_menu");
         getMenuInflater().inflate(R.menu.cancel_save_menu, menu);
-        return true;
+        Log.e(TAG, "inflating cancel_save_menu");
+
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -164,13 +173,25 @@ public class AddGuestsActivity extends AppCompatActivity {
 
     private void save() {
         // must return RESULT_OK to previous activity
-        setResult(RESULT_OK);
-        getIntent().putExtra(GUEST_LIST_TAG, getStrParticipantList());
 
+        Log.e(TAG,  getStrParticipantListNames());
+        getIntent().putExtra(GUEST_NAMES_TAG, getStrParticipantListNames());
+        getIntent().putExtra(GUEST_LIST_TAG, getStrParticipantListID());
+        setResult(RESULT_OK, getIntent());
+        finish();
         Toast.makeText(getBaseContext(), "Saving Guests Added", Toast.LENGTH_SHORT).show();
     }
 
-    private String getStrParticipantList()
+    private String getStrParticipantListID()
+    {
+        String strPartcipantListID = participant_id_list.get(0);
+
+        for(int i = 1; i < participant_id_list.size(); i++) {
+            strPartcipantListID += ", " + participant_id_list.get(i);
+        }
+        return strPartcipantListID;
+    }
+    private String getStrParticipantListNames()
     {
         //TODO: Gather all participant names with delimeter (,)
         //TODO: Go through all the paticipant id. get each name from db then append to  "strPartcipantList"
@@ -227,7 +248,7 @@ public class AddGuestsActivity extends AppCompatActivity {
 
     private void parseParticipantListFromIntent(String participantList) {
         if(!participantList.isEmpty()) {
-            String[] tokens = participantList.split(",");
+            String[] tokens = participantList.split(", ");
 
             for(int i =0; i < tokens.length; i ++) {
                 participant_id_list.add(tokens[i]);

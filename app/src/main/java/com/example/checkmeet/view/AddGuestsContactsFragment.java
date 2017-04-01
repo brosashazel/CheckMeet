@@ -40,6 +40,7 @@ public class AddGuestsContactsFragment extends Fragment implements ContactItemCl
 
     public AddGuestsContactsFragment() {
         // Required empty public constructor
+
     }
 
 
@@ -47,7 +48,6 @@ public class AddGuestsContactsFragment extends Fragment implements ContactItemCl
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-
         // set up data
         contactList = new ArrayList<>();
         colors = new ArrayList<>();
@@ -59,6 +59,8 @@ public class AddGuestsContactsFragment extends Fragment implements ContactItemCl
 
         final String participantList =
                 getArguments().getString(EditMeetingActivity.EXTRA_PARTICIPANT_LIST);
+
+        Log.e(TAG, participantList);
 
         View rootView = inflater.inflate(R.layout.fragment_add_guests_contacts, container, false);
 
@@ -145,10 +147,12 @@ public class AddGuestsContactsFragment extends Fragment implements ContactItemCl
 
     private void parseParticipantListArgument(String participantList) {
         if(!participantList.isEmpty()) {
-            String[] tokens = participantList.split(",");
+            String[] tokens = participantList.split(", ");
+
+            Log.e(TAG, "Parsing Participant List Argument");
 
             for(int i = 0; i < tokens.length; i ++) {
-                searchContactIfParticipant(tokens[0]);
+                searchContactIfParticipant(tokens[i]);
             }
         }
     }
@@ -157,9 +161,15 @@ public class AddGuestsContactsFragment extends Fragment implements ContactItemCl
         boolean found = false;
         int i = 0;
 
+        Log.e(TAG, "Searching Participant");
+
         while(i < contactList.size() && !found) {
-            if(contactList.get(i).getContactID().equals(id))
+            if(contactList.get(i).getContactID().equals(id)) {
+                Log.e(TAG, "FOUND "+id);
                 contactList.get(i).setSelected(true);
+                found = true;
+            }
+            i++;
         }
     }
 

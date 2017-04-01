@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.util.Log;
 
 import com.example.checkmeet.view.AddGuestsContactsFragment;
 import com.example.checkmeet.view.AddGuestsGroupsFragment;
@@ -22,6 +23,7 @@ public class AddGuestsPagerAdapter extends FragmentPagerAdapter {
 
     public AddGuestsPagerAdapter(FragmentManager fm, String participantList) {
         super(fm);
+        Log.e("AddGuestPagerAdapter", "HERE AT ADD GUESTS PAGER ADAPTER");
         this.participantList = participantList;
     }
 
@@ -34,8 +36,10 @@ public class AddGuestsPagerAdapter extends FragmentPagerAdapter {
 
         switch (position) {
             case 0:
+                Log.e("CHECK PAGER", "CONTAAACT");
                 fragment = new AddGuestsContactsFragment();
                 fragment.setArguments(bundle);
+                break;
             default:
                 fragment =  new AddGuestsGroupsFragment();
         }

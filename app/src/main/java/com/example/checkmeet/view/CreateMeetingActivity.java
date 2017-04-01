@@ -341,8 +341,6 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
         meeting.setParticipantList(getParticipantListID());
 
         MeetingService.createMeeting(getBaseContext(), meeting, true);
-
-
     }
 
     private List<String> getParticipantListID()
@@ -350,8 +348,10 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
         List<String> partcipantListID = null;
 
         String [] idArray = strParticipantIdList.split(", ");
+        Log.e(TAG, strParticipantIdList);
         for(int i = 0; i < idArray.length ; i ++)
         {
+            Log.e(TAG, strParticipantIdList);
             partcipantListID.add(idArray[i]);
         }
 
