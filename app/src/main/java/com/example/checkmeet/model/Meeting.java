@@ -12,6 +12,7 @@ public class Meeting {
     public static final String TABLE_NAME = "meeting";
 
     public static final String COL_MEETINGID = "_id";
+    public static final String COL_DEVICE_ID = "device_id";
     public static final String COL_TITLE = "title";
     public static final String COL_DESCRIPTION = "description";
     public static final String COL_DATE = "date";
@@ -25,6 +26,7 @@ public class Meeting {
     public static final String COL_LONGITUDE = "longitude";
     public static final String COL_PARTICIPANTS_STRING = "string_participants";
     public static final String COL_NOTES = "notes";
+    public static final String COL_STATUS = "status";
 
     public static final String TABLE_NAME_MEETING_PARTICIPANTS = "meeting_participant";
     public static final String MEETING_PARTICIPANTS_COL_ID = "_id";
@@ -38,6 +40,7 @@ public class Meeting {
 
     /// final attributes
     private int meeting_id;
+    private String device_id;
     private String title;
     private String description;
     private Date date;
@@ -52,6 +55,7 @@ public class Meeting {
     private double longitude;
     private String stringParticipants;
     private String notes;
+    private String status;
 
     public String getTitle() {
         return title;
@@ -75,6 +79,14 @@ public class Meeting {
 
     public void setMeeting_id(int meeting_id) {
         this.meeting_id = meeting_id;
+    }
+
+    public String getDevice_id() {
+        return device_id;
+    }
+
+    public void setDevice_id(String device_id) {
+        this.device_id = device_id;
     }
 
     public String getDescription() {
@@ -171,5 +183,13 @@ public class Meeting {
 
     public void setIsHost(boolean host) {
         isHost = host;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

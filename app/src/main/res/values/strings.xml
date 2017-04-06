@@ -39,6 +39,7 @@
 
     <string name="popup_edit">Edit</string>
     <string name="popup_delete">Delete</string>
+    <string name="popup_cancel">Cancel Meeting</string>
     <string name="popup_open_notes">Open Notes</string>
     <string name="title_activity_choose_location">Map</string>
     <string name="title_activity_view_location">Map</string>

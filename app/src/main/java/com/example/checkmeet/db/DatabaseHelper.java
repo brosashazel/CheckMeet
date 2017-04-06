@@ -10,6 +10,7 @@ import android.util.Log;
 import com.example.checkmeet.model.Date;
 import com.example.checkmeet.model.Group;
 import com.example.checkmeet.model.Meeting;
+import com.example.checkmeet.model.Status;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +32,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
     private static final String SQL_CREATE_MEETING_TABLE =
             "CREATE TABLE IF NOT EXISTS " + Meeting.TABLE_NAME + " ( " +
                     Meeting.COL_MEETINGID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    Meeting.COL_DEVICE_ID + " TEXT, " +
                     Meeting.COL_TITLE + " TEXT NOT NULL, " +
                     Meeting.COL_DESCRIPTION + " TEXT, " +
                     Meeting.COL_DATE + " INTEGER NOT NULL, " +
@@ -43,7 +45,8 @@ public class DatabaseHelper extends SQLiteOpenHelper{
                     Meeting.COL_LATITUDE + " REAL NOT NULL, " +
                     Meeting.COL_LONGITUDE + " REAL NOT NULL, " +
                     Meeting.COL_PARTICIPANTS_STRING + " TEXT NOT NULL," +
-                    Meeting.COL_NOTES + " TEXT);";
+                    Meeting.COL_NOTES + " TEXT," +
+                    Meeting.COL_STATUS + " TEXT NOT NULL);";
 
     // group
     private static final String SQL_CREATE_GROUP_TABLE =
@@ -136,6 +139,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         meeting.setHostName("Courtney Ngo");
         meeting.setStringParticipants(participants);
         meeting.setNotes("Jollibee Delivery LOL NOTESSSSS");
+        meeting.setStatus(Status.PENDING.name());
 
         meetingList.add(meeting);
 
@@ -156,12 +160,13 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         meeting.setHostName("Briane Samson");
         meeting.setStringParticipants(participants);
         meeting.setNotes("Fifth Harmony Live in Manila NOTEEEEES");
+        meeting.setStatus(Status.PENDING.name());
 
         meetingList.add(meeting);
 
         // MEETING 3
         meeting = new Meeting();
-        meeting.setIsHost(false);
+        meeting.setIsHost(true);
         meeting.setTitle("Food Trip, Baby!");
         meeting.setDescription("Are you hungry? Me too! Let's eat! :D");
         date = new Date(6, 15, 2017);
@@ -175,6 +180,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         meeting.setHostName("Roger Uy");
         meeting.setStringParticipants(participants);
         meeting.setNotes("");
+        meeting.setStatus(Status.PENDING.name());
 
         meetingList.add(meeting);
 
@@ -195,12 +201,13 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         meeting.setHostName("Tessie Limoanco");
         meeting.setStringParticipants(participants);
         meeting.setNotes("");
+        meeting.setStatus(Status.PENDING.name());
 
         meetingList.add(meeting);
 
         // MEETING 5
         meeting = new Meeting();
-        meeting.setIsHost(false);
+        meeting.setIsHost(true);
         meeting.setTitle("SPRINT meeting");
         meeting.setDescription("Officer's meeting only sabi ni madam");
         date = new Date(0, 1, 2017);
@@ -214,6 +221,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         meeting.setHostName("Doc Mac");
         meeting.setStringParticipants(participants);
         meeting.setNotes("");
+        meeting.setStatus(Status.PENDING.name());
 
         meetingList.add(meeting);
 
@@ -254,6 +262,9 @@ public class DatabaseHelper extends SQLiteOpenHelper{
 
             // notes
             contentValues.put(Meeting.COL_NOTES, meeting.getNotes());
+
+            // status
+            contentValues.put(Meeting.COL_STATUS, meeting.getStatus());
 
             // store to DB
             db.insert(Meeting.TABLE_NAME, null, contentValues);

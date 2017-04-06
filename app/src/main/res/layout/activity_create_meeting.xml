@@ -289,6 +289,8 @@
                 android:layout_height="wrap_content"
                 android:textSize="@dimen/label_size"
                 android:layout_marginBottom="10dp"
+                android:layout_marginRight="36dp"
+                android:layout_marginLeft="30dp"
                 android:id="@+id/tv_guest_list"
                 />
 
