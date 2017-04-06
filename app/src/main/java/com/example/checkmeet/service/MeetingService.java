@@ -358,7 +358,8 @@ public class MeetingService {
             meeting.setNotes(cursor.getString(cursor.getColumnIndex(Meeting.COL_NOTES)));
 
             // status
-            meeting.setStatus(cursor.getString(cursor.getColumnIndex(Meeting.COL_STATUS)));
+            meeting.setStatus(
+                    Status.getValue(cursor.getString(cursor.getColumnIndex(Meeting.COL_STATUS))));
 
         }
 

@@ -55,7 +55,7 @@ public class Meeting {
     private double longitude;
     private String stringParticipants;
     private String notes;
-    private String status;
+    private Status status;
 
     public String getTitle() {
         return title;
@@ -185,11 +185,11 @@ public class Meeting {
         isHost = host;
     }
 
-    public String getStatus() {
+    public Status getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Status status) {
         this.status = status;
     }
 }

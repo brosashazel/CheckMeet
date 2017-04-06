@@ -6,5 +6,12 @@ package com.example.checkmeet.model;
 
 public enum Status {
 
-    PENDING, CANCELLED
+    PENDING, CANCELLED;
+
+    public static Status getValue(String status) {
+        switch(status) {
+            case "PENDING" : return PENDING;
+            default: return CANCELLED;
+        }
+    }
 }

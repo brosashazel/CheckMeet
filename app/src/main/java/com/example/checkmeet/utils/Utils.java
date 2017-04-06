@@ -134,7 +134,7 @@ public class Utils {
         int meetingDetailsCount = meetingDetails.length;
 
         //deviceID
-
+        meeting.setDevice_id(meetingDetails[0]);
         //Meeting Name
         meeting.setTitle(meetingDetails[1]);
         //Meeting Date
@@ -148,9 +148,9 @@ public class Utils {
         //Meeting Address
         meeting.setAddress(meetingDetails[5]);
         //Meeting Latitude
-        meeting.setLatitude(Long.parseLong(meetingDetails[6]));
+        meeting.setLatitude(Double.parseDouble(meetingDetails[6]));
         //Meeting Longitude
-        meeting.setLongitude(Long.parseLong(meetingDetails[7]));
+        meeting.setLongitude(Double.parseDouble(meetingDetails[7]));
         //Meeting Participants (Names)
         meeting.setStringParticipants(meetingDetails[8]);
         //Meeting Hostname
