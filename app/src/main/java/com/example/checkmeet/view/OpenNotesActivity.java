@@ -2,6 +2,7 @@ package com.example.checkmeet.view;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.graphics.drawable.ColorDrawable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -20,6 +21,7 @@ public class OpenNotesActivity extends AppCompatActivity {
     private EditText et_notes;
 
     private long meeting_id;
+    private int meetingColor;
     private String notes;
 
     @Override
@@ -33,12 +35,14 @@ public class OpenNotesActivity extends AppCompatActivity {
         String meeting_title = getIntent().getStringExtra(Meeting.COL_TITLE);
 
         notes = getIntent().getStringExtra(Meeting.COL_NOTES);
+        meetingColor = getIntent().getIntExtra(EditMeetingActivity.MEETING_COLOR,0);
 
         ActionBar actionBar = getSupportActionBar();
 
         if(actionBar != null) {
             actionBar.setTitle(meeting_title);
             actionBar.setSubtitle("Notes");
+            actionBar.setBackgroundDrawable(new ColorDrawable(meetingColor));
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 

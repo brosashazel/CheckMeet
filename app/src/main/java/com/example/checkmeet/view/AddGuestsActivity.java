@@ -3,6 +3,7 @@ package com.example.checkmeet.view;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.provider.ContactsContract;
 import android.support.design.widget.TabLayout;
@@ -40,6 +41,7 @@ import java.util.Set;
 public class AddGuestsActivity extends AppCompatActivity {
 
     public static final String GUEST_LIST_TAG = "GUEST_LIST_TAG";
+    public static final String GUEST_NAMES_TAG = "GUEST_NAMES_TAG";
 
     private static final String TAG = "AddGuestsActivity";
 
@@ -65,20 +67,22 @@ public class AddGuestsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_guests);
 
+        Log.e(TAG, "CREATED ACTIVITY ADD GUESTS");
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle("Add Guests");
+        setSupportActionBar(toolbar);
 
         participant_id_list = new ArrayList<>();
-
         // get participant_id_list from edit activity
         String participantList = getIntent().getStringExtra(
                 EditMeetingActivity.EXTRA_PARTICIPANT_LIST);
+
+        Log.e(TAG, participantList);
 
         // null if from CreateMeetingActivity
         if(participantList != null) {
             parseParticipantListFromIntent(participantList);
         }
-
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
         mSectionsPagerAdapter =
@@ -96,9 +100,12 @@ public class AddGuestsActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
+
+        Log.e(TAG, "BEFORE inflating cancel_save_menu");
         getMenuInflater().inflate(R.menu.cancel_save_menu, menu);
-        return true;
+        Log.e(TAG, "inflating cancel_save_menu");
+
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -164,25 +171,48 @@ public class AddGuestsActivity extends AppCompatActivity {
 
     private void save() {
         // must return RESULT_OK to previous activity
-        setResult(RESULT_OK);
-        getIntent().putExtra(GUEST_LIST_TAG, getStrParticipantList());
-
-        Toast.makeText(getBaseContext(), "Saving Guests Added", Toast.LENGTH_SHORT).show();
+        String nameList = getStrParticipantListNames();
+        String idList = getStrParticipantListID();
+        if(nameList != "" && idList != "") {
+            getIntent().putExtra(GUEST_NAMES_TAG, nameList);
+            getIntent().putExtra(GUEST_LIST_TAG, idList);
+            setResult(RESULT_OK, getIntent());
+            finish();
+            Toast.makeText(getBaseContext(), "Saving Guests Added", Toast.LENGTH_SHORT).show();
+        }else{
+            showAlertDialog("Sorry, your meeting should at least have 1 participant.");
+        }
     }
 
-    private String getStrParticipantList()
+    private String getStrParticipantListID()
+    {
+        if(!participant_id_list.isEmpty()) {
+            String strPartcipantListID = participant_id_list.get(0);
+
+            for (int i = 1; i < participant_id_list.size(); i++) {
+                strPartcipantListID += ", " + participant_id_list.get(i);
+            }
+            return strPartcipantListID;
+        }
+        else
+            return "";
+    }
+    private String getStrParticipantListNames()
     {
         //TODO: Gather all participant names with delimeter (,)
         //TODO: Go through all the paticipant id. get each name from db then append to  "strPartcipantList"
+        if(!participant_id_list.isEmpty()) {
+            String strPartcipantList = getContactName(participant_id_list.get(0));
 
-        String strPartcipantList = getContactName(participant_id_list.get(0));
-
-        for(int i = 1; i < participant_id_list.size(); i++) {
+            for (int i = 1; i < participant_id_list.size(); i++) {
                 strPartcipantList += ", " + getContactName(participant_id_list.get(i));
+            }
+            //Check view group activity to see how contacts are retrieved.
+            return strPartcipantList;
         }
+        else
+            return "";
 
-        //Check view group activity to see how contacts are retrieved.
-        return strPartcipantList;
     }
 
     private String getContactName(String member_id) {
@@ -227,12 +257,27 @@ public class AddGuestsActivity extends AppCompatActivity {
 
     private void parseParticipantListFromIntent(String participantList) {
         if(!participantList.isEmpty()) {
-            String[] tokens = participantList.split(",");
+            String[] tokens = participantList.split(", ");
 
             for(int i =0; i < tokens.length; i ++) {
                 participant_id_list.add(tokens[i]);
             }
         }
+    }
+
+    public void showAlertDialog(String msg)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+// Add the buttons
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+            }
+        });
+        builder.setMessage(msg);
+// Create the AlertDialog
+        AlertDialog dialog = builder.create();
+
+        dialog.show();
     }
 
 }

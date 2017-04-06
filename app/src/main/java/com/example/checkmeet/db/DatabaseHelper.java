@@ -10,6 +10,7 @@ import android.util.Log;
 import com.example.checkmeet.model.Date;
 import com.example.checkmeet.model.Group;
 import com.example.checkmeet.model.Meeting;
+import com.example.checkmeet.model.Status;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +32,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
     private static final String SQL_CREATE_MEETING_TABLE =
             "CREATE TABLE IF NOT EXISTS " + Meeting.TABLE_NAME + " ( " +
                     Meeting.COL_MEETINGID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    Meeting.COL_DEVICE_ID + " TEXT, " +
                     Meeting.COL_TITLE + " TEXT NOT NULL, " +
                     Meeting.COL_DESCRIPTION + " TEXT, " +
                     Meeting.COL_DATE + " INTEGER NOT NULL, " +
@@ -43,7 +45,8 @@ public class DatabaseHelper extends SQLiteOpenHelper{
                     Meeting.COL_LATITUDE + " REAL NOT NULL, " +
                     Meeting.COL_LONGITUDE + " REAL NOT NULL, " +
                     Meeting.COL_PARTICIPANTS_STRING + " TEXT NOT NULL," +
-                    Meeting.COL_NOTES + " TEXT);";
+                    Meeting.COL_NOTES + " TEXT," +
+                    Meeting.COL_STATUS + " TEXT NOT NULL);";
 
     // group
     private static final String SQL_CREATE_GROUP_TABLE =
@@ -125,7 +128,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         meeting.setIsHost(false);
         meeting.setTitle("Jollibee Delivery LOL");
         meeting.setDescription("Hi! Welcome to Jollibee! How may I take your order?");
-        date = new Date(2, 30, 2017);
+        date = new Date(6, 8, 2017);
         meeting.setDate(date);
         meeting.setStartTime(1800);
         meeting.setEndTime(2000);
@@ -136,6 +139,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         meeting.setHostName("Courtney Ngo");
         meeting.setStringParticipants(participants);
         meeting.setNotes("Jollibee Delivery LOL NOTESSSSS");
+        meeting.setStatus(Status.PENDING);
 
         meetingList.add(meeting);
 
@@ -145,7 +149,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         meeting.setTitle("Fifth Harmony Live in Manila");
         meeting.setDescription("You don't gotta go to work, work, work, work, work, work, work\n" +
                 "But you gotta put in work, work, work, work, work, work, work");
-        date = new Date(3, 4, 2017);
+        date = new Date(10, 4, 2017);
         meeting.setDate(date);
         meeting.setStartTime(1000);
         meeting.setEndTime(1530);
@@ -156,6 +160,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         meeting.setHostName("Briane Samson");
         meeting.setStringParticipants(participants);
         meeting.setNotes("Fifth Harmony Live in Manila NOTEEEEES");
+        meeting.setStatus(Status.PENDING);
 
         meetingList.add(meeting);
 
@@ -175,6 +180,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         meeting.setHostName("Roger Uy");
         meeting.setStringParticipants(participants);
         meeting.setNotes("");
+        meeting.setStatus(Status.PENDING);
 
         meetingList.add(meeting);
 
@@ -195,6 +201,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         meeting.setHostName("Tessie Limoanco");
         meeting.setStringParticipants(participants);
         meeting.setNotes("");
+        meeting.setStatus(Status.PENDING);
 
         meetingList.add(meeting);
 
@@ -214,6 +221,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         meeting.setHostName("Doc Mac");
         meeting.setStringParticipants(participants);
         meeting.setNotes("");
+        meeting.setStatus(Status.PENDING);
 
         meetingList.add(meeting);
 
@@ -254,6 +262,9 @@ public class DatabaseHelper extends SQLiteOpenHelper{
 
             // notes
             contentValues.put(Meeting.COL_NOTES, meeting.getNotes());
+
+            // status
+            contentValues.put(Meeting.COL_STATUS, String.valueOf(meeting.getStatus()));
 
             // store to DB
             db.insert(Meeting.TABLE_NAME, null, contentValues);

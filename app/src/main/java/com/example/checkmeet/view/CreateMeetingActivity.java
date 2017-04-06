@@ -1,5 +1,7 @@
 package com.example.checkmeet.view;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -9,7 +11,9 @@ import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.telephony.TelephonyManager;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.TypefaceSpan;
@@ -37,6 +41,7 @@ import com.thebluealliance.spectrum.SpectrumPalette;
 import com.wdullaer.materialdatetimepicker.date.DatePickerDialog;
 import com.wdullaer.materialdatetimepicker.time.TimePickerDialog;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Iterator;
@@ -53,6 +58,7 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
     public static final String MEETING_COLOR = "MEETING_COLOR";
     public static final int REQUEST_ADD_GUESTS = 1;
     private static final int PLACE_PICKER_REQUEST = 2;
+    public static String HOSTNAME = "Nicolle Magpale";
 
     private EditText etMeetingName;
     private EditText etMeetingDescription;
@@ -68,39 +74,39 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
     private ImageButton btnOpenCalendar;
     private ImageButton btnOpenToTime;
 
-
     private int timeFlag;
-    private int timeFirstSet;
     private int fromHour;
     private int fromMinute;
     private int toHour;
     private int toMinute;
+    private int month;
+    private int day;
+    private int year;
     private int meetingColor;
     private String strParticipantIdList;
     private String guestNames;
+    private String imeiID;
     private Place place;
 
     public static Typeface tf_roboto;
     private ActionBar actionBar;
-
+    private int isToday;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_meeting);
-
         initView();
     }
 
     private void initView() {
 
         timeFlag = 0;
-        timeFirstSet = 0;
         meetingColor = Color.rgb(255, 152, 0);
+        TelephonyManager mngr = (TelephonyManager) getSystemService(getBaseContext().TELEPHONY_SERVICE);
+        imeiID = mngr.getDeviceId();
         etMeetingName = (EditText) findViewById(R.id.et_meeting_name);
         etMeetingDescription = (EditText) findViewById(R.id.et_meeting_description);
-
-
         tvDate = (TextView) findViewById(R.id.tv_date);
         tvTimefrom = (TextView) findViewById(R.id.tv_timefrom);
         tvTimeto = (TextView) findViewById(R.id.tv_timeto);
@@ -112,7 +118,6 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
         btnOpenToTime = (ImageButton) findViewById(R.id.btn_open_to_time);
         btnAddGuests = (ImageButton) findViewById(R.id.btn_add_guests);
         btnPickLocation = (ImageButton) findViewById(R.id.btn_pick_location_create);
-
         palette = (SpectrumPalette) findViewById(R.id.palette);
 
         actionBar = getSupportActionBar();
@@ -121,12 +126,17 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
         tvDate.setText(dateToday.get(Calendar.MONTH) + 1 + "/" +
                 dateToday.get(Calendar.DAY_OF_MONTH) + "/" +
                 dateToday.get(Calendar.YEAR));
-        tvTimefrom.setText(convertTimeToString(dateToday.get(Calendar.HOUR_OF_DAY), dateToday.get(Calendar.MINUTE)));
-        tvTimeto.setText(convertTimeToString(dateToday.get(Calendar.HOUR_OF_DAY) + 1, dateToday.get(Calendar.MINUTE)));
+        tvTimefrom.setText(convertTimeToString(
+                dateToday.get(Calendar.HOUR_OF_DAY), dateToday.get(Calendar.MINUTE)));
+        tvTimeto.setText(convertTimeToString(
+                dateToday.get(Calendar.HOUR_OF_DAY) + 1 , dateToday.get(Calendar.MINUTE)));
         fromHour = dateToday.get(Calendar.HOUR_OF_DAY);
         toHour = dateToday.get(Calendar.HOUR_OF_DAY) + 1;
         fromMinute = dateToday.get(Calendar.MINUTE);
-        toMinute = dateToday.get(Calendar.MINUTE) + 1;
+        toMinute = dateToday.get(Calendar.MINUTE);
+        month = dateToday.get(Calendar.MONTH);
+        day = dateToday.get(Calendar.DAY_OF_MONTH);
+        year = dateToday.get(Calendar.YEAR);
         strParticipantIdList = "";
 
         palette.setOnColorSelectedListener(this);
@@ -141,6 +151,249 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
         s.setSpan(new TypefaceSpan("fonts/rancho_regular.ttf"), 0, s.length(),
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         this.getSupportActionBar().setTitle(s);
+    }
+
+    @Override
+    public void onColorSelected(@ColorInt int color) {
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(color));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(Utils.getDarkColor(color));
+        }
+        meetingColor = color;
+    }
+
+    @Override
+    public void onClick(View view) {
+        Log.d(TAG, "CLICKED");
+        if (view.getId() == btnOpenCalendar.getId()) {
+            showDatePicker();
+        } else if (view.getId() == btnOpenToTime.getId()) {
+            timeFlag = 1;
+            showTimePicker(1);
+        } else if (view.getId() == btnOpenFromTime.getId()) {
+            timeFlag = 0;
+            showTimePicker(0);
+        } else if (view.getId() == btnAddGuests.getId()) {
+
+            Intent i = new Intent(this, AddGuestsActivity.class);
+            i.putExtra(MEETING_COLOR, meetingColor);
+            i.putExtra(EditMeetingActivity.EXTRA_PARTICIPANT_LIST, strParticipantIdList);
+            startActivityForResult(i, REQUEST_ADD_GUESTS);
+
+        } else if (view.getId() == btnPickLocation.getId()) {
+
+            Toast.makeText(this, "Opening map...", Toast.LENGTH_SHORT).show();
+            // open place picker
+            PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
+            try {
+                startActivityForResult(builder.build(this), PLACE_PICKER_REQUEST);
+            } catch (GooglePlayServicesRepairableException |
+                    GooglePlayServicesNotAvailableException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void showAlertDialog(String msg, final int resumeDialog)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+// Add the buttons
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                if(resumeDialog == 1)
+                    showTimePicker(1);
+                else if(resumeDialog == 2)
+                    showTimePicker(0);
+                else if(resumeDialog == 3)
+                    showDatePicker();
+            }
+        });
+        builder.setMessage(msg);
+// Create the AlertDialog
+        AlertDialog dialog = builder.create();
+
+        dialog.show();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.cancel_save_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        int id = item.getItemId();
+
+        switch (id) {
+            case R.id.action_cancel:
+                Toast.makeText(getBaseContext(), "Creating Meeting Canceled",
+                        Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.action_save:
+                Toast.makeText(getBaseContext(), "Meeting Saved",
+                        Toast.LENGTH_SHORT).show();
+                if(checkAllInput())
+                    createMeeting();
+                else
+                    showAlertDialog("Please fill up all necessary details.", 0);
+        }
+        super.onBackPressed();
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_ADD_GUESTS) {
+
+            switch (resultCode) {
+                case RESULT_OK:
+                    guestNames = data.getStringExtra(AddGuestsActivity.GUEST_NAMES_TAG);
+                    strParticipantIdList = data.getStringExtra(AddGuestsActivity.GUEST_LIST_TAG);
+                    tvGuestList.setText(guestNames);
+
+                    break;
+                case RESULT_CANCELED:
+                    break;
+
+            }
+
+        } else if (requestCode == PLACE_PICKER_REQUEST) {
+            switch (resultCode) {
+                case RESULT_OK:
+
+                    place = PlacePicker.getPlace(getBaseContext(), data);
+
+                    String finalAddress;
+
+                    // check if coordinates
+                    if (place.getName().toString().contains("°")) {
+                        finalAddress = place.getAddress().toString();
+                    } else {
+                        finalAddress = place.getName().toString() + ", " +
+                                place.getAddress().toString();
+                    }
+                    String toastMsg = String.format("Place: %s", finalAddress);
+                    Toast.makeText(this, toastMsg, Toast.LENGTH_LONG).show();
+
+                    tv_selected_location.setText(finalAddress);
+                    tv_selected_location.setVisibility(View.VISIBLE);
+
+                    break;
+                case RESULT_CANCELED:
+                    break;
+            }
+        }
+    }
+//////////////////////////////////////// SETTING MEETING DATE /////////////////////////////////
+    public void showDatePicker()
+    {
+        DatePickerDialog dpd = DatePickerDialog.newInstance(
+                this,
+                year,
+                month,
+                day
+        );
+        dpd.setVersion(DatePickerDialog.Version.VERSION_2);
+        dpd.setCancelColor(Color.DKGRAY);
+        dpd.setOkColor(Color.DKGRAY);
+        dpd.setAccentColor(meetingColor);
+        dpd.show(getFragmentManager(), "Datepickerdialog");
+    }
+
+    @Override
+    public void onDateSet(DatePickerDialog view, int pyear, int pmonthOfYear, int pdayOfMonth) {
+        Calendar now = Calendar.getInstance();
+        Calendar datePick = Calendar.getInstance();
+        datePick.set(pyear, pmonthOfYear, pdayOfMonth);
+        if(now.after(datePick)) {
+            showAlertDialog("Oops! You can't set a meeting any time before today.", 3);
+        }else if(now.equals(datePick))
+        {
+            isToday = 1;
+            tvDate.setText((pmonthOfYear + 1) + "/" + pdayOfMonth + "/" + year);
+            year = pyear;
+            month = pmonthOfYear;
+            day = pdayOfMonth;
+        }else {
+            tvDate.setText((pmonthOfYear + 1) + "/" + pdayOfMonth + "/" + year);
+            year = pyear;
+            month = pmonthOfYear;
+            day = pdayOfMonth;
+        }
+    }
+
+    //////////////////////////////////////// SETTING MEETING TIME /////////////////////////////////
+
+    public void showTimePicker(int tofromtime) {
+
+        int hour;
+        int min;
+
+        if (tofromtime == 0) {
+            hour = fromHour;
+            min = fromMinute;
+
+        } else {
+            hour = toHour;
+            min = toMinute;
+        }
+        TimePickerDialog tpd = TimePickerDialog.newInstance(
+                this,
+                hour,
+                min,
+                false);
+
+        if(tofromtime == 0)
+            tpd.setTitle("Start Time");
+        else
+            tpd.setTitle("End Time");
+        tpd.setVersion(TimePickerDialog.Version.VERSION_2);
+        tpd.setAccentColor(meetingColor);
+        tpd.show(getFragmentManager(), "Timepickerdialog");
+    }
+
+    @Override
+    public void onTimeSet(TimePickerDialog view, int hourOfDay, int minute, int second) {
+        if (timeFlag == 0) {
+            if(isToday == 1 && checkTimeOfDay(hourOfDay, minute)){
+                tvTimeto.setText(Utils.dateIntegerToString((hourOfDay + 1) * 100  + minute ));
+                tvTimefrom.setText(Utils.dateIntegerToString(hourOfDay * 100 + minute));
+                fromHour = hourOfDay;
+                fromMinute = minute;
+                toHour = hourOfDay + 1;
+                toMinute = minute;
+                timeFlag = 1;
+                showTimePicker(1);
+            }else if(isToday == 0){
+                tvTimeto.setText(Utils.dateIntegerToString((hourOfDay + 1) * 100  + minute ));
+                tvTimefrom.setText(Utils.dateIntegerToString(hourOfDay * 100 + minute));
+                fromHour = hourOfDay;
+                fromMinute = minute;
+                toHour = hourOfDay + 1;
+                toMinute = minute;
+                timeFlag = 1;
+                showTimePicker(1);
+            }else
+            {
+                showAlertDialog("Sorry, the time you entered has already passed. Please choose a later time.", 2);
+            }
+        }else{
+            if (isTimeValid(fromHour, hourOfDay, fromMinute, minute)) {
+                tvTimeto.setText(Utils.dateIntegerToString(hourOfDay * 100 + minute));
+                toHour = hourOfDay;
+                toMinute = minute;
+            } else {
+                showAlertDialog("Sorry, CheckMeet only accepts meetings that are within the day.", 1);
+
+            }
+        }
     }
 
     public String convertTimeToString(int hourOfDay, int minute) {
@@ -164,99 +417,28 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
         if (minute < 10)
             min = "0" + min;
 
-        strTime = hr + ":" + min + "  " + partOfDay;
+        strTime = hr + ":" + min + " " + partOfDay;
         return strTime;
     }
 
-    @Override
-    public void onColorSelected(@ColorInt int color) {
-
-        Log.d(TAG, "Meeting Color changed to " + String.format("#%06X", (0xFFFFFF & color)));
-        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(color));
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Window window = getWindow();
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.setStatusBarColor(Utils.getDarkColor(color));
+    public boolean checkTimeOfDay(int hour, int min) {
+        Calendar now = Calendar.getInstance();
+        if (now.get(Calendar.HOUR_OF_DAY) > hour)
+            return false;
+        else if (now.get(Calendar.HOUR_OF_DAY) < hour) {
+            return true;
+        } else if (now.get(Calendar.HOUR_OF_DAY) == hour) {
+            if (now.get(Calendar.MINUTE) > min)
+                return false;
+            else
+                return true;
         }
-
-        meetingColor = color;
-    }
-
-    @Override
-    public void onClick(View view) {
-        Log.d(TAG, "CLICKED");
-        if (view.getId() == btnOpenCalendar.getId()) {
-            Log.d(TAG, "DATE PICKER BUTTON CLICKED");
-            Calendar now = Calendar.getInstance();
-            DatePickerDialog dpd = DatePickerDialog.newInstance(
-                    this,
-                    now.get(Calendar.YEAR),
-                    now.get(Calendar.MONTH),
-                    now.get(Calendar.DAY_OF_MONTH)
-            );
-            dpd.setAccentColor(meetingColor);
-            dpd.setVersion(DatePickerDialog.Version.VERSION_2);
-            dpd.setCancelColor(Color.DKGRAY);
-            dpd.setOkColor(Color.DKGRAY);
-            dpd.show(getFragmentManager(), "Datepickerdialog");
-        } else if (view.getId() == btnOpenToTime.getId()) {
-            timeFlag = 1;
-            showTimePicker(1);
-        } else if (view.getId() == btnOpenFromTime.getId()) {
-            timeFlag = 0;
-            showTimePicker(0);
-        } else if (view.getId() == btnAddGuests.getId()) {
-            Intent i = new Intent(this, AddGuestsActivity.class);
-            i.putExtra(MEETING_COLOR, meetingColor);
-            i.putExtra(EditMeetingActivity.EXTRA_PARTICIPANT_LIST, strParticipantIdList);
-            //Error IDK What
-            Log.e(TAG, "Going to ADD GUEST");
-            startActivityForResult(i, REQUEST_ADD_GUESTS);
-        } else if (view.getId() == btnPickLocation.getId()) {
-
-            Toast.makeText(this, "Opening map...", Toast.LENGTH_SHORT).show();
-
-            // open place picker
-            PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
-            try {
-                startActivityForResult(builder.build(this), PLACE_PICKER_REQUEST);
-            } catch (GooglePlayServicesRepairableException |
-                    GooglePlayServicesNotAvailableException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
-    public void onDateSet(DatePickerDialog view, int year, int monthOfYear, int dayOfMonth) {
-
-        tvDate.setText((monthOfYear + 1) + "/" + dayOfMonth + "/" + year);
-    }
-
-    @Override
-    public void onTimeSet(TimePickerDialog view, int hourOfDay, int minute, int second) {
-
-        if (timeFlag == 0) {
-            tvTimefrom.setText(Utils.dateIntegerToString(hourOfDay * 100 + minute));
-            if (timeFirstSet == 0)
-                tvTimeto.setText(Utils.dateIntegerToString(hourOfDay * 100 + minute + 1));
-            Log.d(TAG, "TIME: " + hourOfDay + " : " + minute);
-            fromHour = hourOfDay;
-            fromMinute = minute;
-        } else {
-            if (isTimeValid(fromHour, hourOfDay, fromMinute, minute)) {
-                tvTimeto.setText(Utils.dateIntegerToString(hourOfDay * 100 + minute));
-                toHour = hourOfDay;
-                toMinute = minute;
-            } else {
-                Toast.makeText(getBaseContext(), "Invalid Time", Toast.LENGTH_SHORT).show();
-                showTimePicker(1);
-            }
-        }
+        return false;
     }
 
     public boolean isTimeValid(int fromHourOfDay, int toHourOfDay, int fromMinute, int toMinute) {
+        Log.e(TAG, "Checking " + fromHourOfDay + ":" + fromMinute + " " + toHourOfDay + ":" + toMinute );
+
         if (fromHourOfDay > toHourOfDay)
             return false;
         else if (fromHourOfDay < toHourOfDay) {
@@ -270,68 +452,55 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
         return false;
     }
 
-    public void showTimePicker(int tofromtime) {
-        Calendar now = Calendar.getInstance();
-        int hour;
-        int min;
+//////////////////////////////////////// SMS GENERATION  /////////////////////////////////
 
-        if (tofromtime == 0) {
-            hour = fromHour;
-            min = fromMinute;
-        } else {
-            hour = toHour;
-            min = toMinute;
-        }
+    public String generateSMS()
+    {
+        String[] dateParts = tvDate.getText().toString().split("/");
+        String sms = "CKMT [CRT] \n\n" +
+                    etMeetingName.getText().toString() + "\n\n" +
+                    "Hi! I have scheduled a meeting with you on " +
+                    Utils.dateToString(new Date(Integer.parseInt(dateParts[0]),
+                            Integer.parseInt(dateParts[1]), Integer.parseInt(dateParts[2]))) + " " +
 
-        TimePickerDialog tpd = TimePickerDialog.newInstance(
-                this,
-                hour,
-                min,
-                false);
-        tpd.setVersion(TimePickerDialog.Version.VERSION_2);
-        tpd.setAccentColor(meetingColor);
-        tpd.show(getFragmentManager(), "Timepickerdialog");
+                    tvTimefrom.getText().toString() + " - " +
+                    tvTimeto.getText().toString() + " at " +
+                    tv_selected_location.getText().toString() + "\n\n" +
+                    "See you there! \n\n " +
+                    "__________\n\n" + //10 underscores
+                    imeiID + "$&" +
+                    etMeetingName.getText().toString() + "$&" +
+                    tvDate.getText().toString()+ "$&" +
+                    tvTimefrom.getText().toString() + "$&" +
+                    tvTimeto.getText().toString() + "$&" +
+                    place.getAddress() + "$&" +
+                    place.getLatLng().latitude + "$&" +
+                    place.getLatLng().longitude + "$&" +
+                    tvGuestList.getText().toString() + "$&" +
+                    HOSTNAME + "$&" +  /*Change to shared preference shiz*/
+                    meetingColor;
+
+                if(!(etMeetingDescription.getText().toString().isEmpty()))
+                    sms = "$&" + etMeetingDescription.getText().toString();
+        return sms;
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.cancel_save_menu, menu);
-        return true;
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        int id = item.getItemId();
-
-        switch (id) {
-            case R.id.action_cancel:
-                Toast.makeText(getBaseContext(), "Creating Meeting Canceled",
-                        Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.action_save:
-                Toast.makeText(getBaseContext(), "Meeting Saved",
-                        Toast.LENGTH_SHORT).show();
-                createMeeting();
-        }
-
-        super.onBackPressed();
-        return super.onOptionsItemSelected(item);
-    }
+//////////////////////////////////////// CREATING MEETING /////////////////////////////////
 
     public void createMeeting() {
         Log.e(TAG, "Creating Meeting");
         Meeting meeting = new Meeting();
         String[] dateParts = tvDate.getText().toString().split("/");
+        meeting.setDevice_id(imeiID);
         meeting.setTitle(etMeetingName.getText().toString());
         meeting.setDescription(etMeetingDescription.getText().toString());
-        meeting.setDate(new Date(Integer.parseInt(dateParts[0]),
+        meeting.setDate(new Date(Integer.parseInt(dateParts[0]) - 1,
                 Integer.parseInt(dateParts[1]),
                 Integer.parseInt(dateParts[2])));
         meeting.setStartTime(Utils.dateStringToInteger(tvTimefrom.getText().toString()));
         meeting.setEndTime(Utils.dateStringToInteger(tvTimeto.getText().toString()));
-        meeting.setHostName("Nicolle Magpale");
+        meeting.setHostName(HOSTNAME); //TODO: CHANGE TO PREFERENCE
         meeting.setIsHost(true);
         meeting.setColor(meetingColor);
         meeting.setAddress(place.getAddress() + "");
@@ -340,61 +509,49 @@ public class CreateMeetingActivity extends AppCompatActivity implements Spectrum
         meeting.setStringParticipants(guestNames);
         meeting.setParticipantList(getParticipantListID());
 
+/*        Log.e(TAG, "start time in text field = " + tvTimefrom.getText().toString());
+        Log.e(TAG, "end time in text field = " + tvTimeto.getText().toString());
+
+        Log.e(TAG, "title = " + meeting.getTitle());
+        Log.e(TAG, "description = " + meeting.getDescription());
+        Log.e(TAG, "date = " + meeting.getDate().toString());
+        Log.e(TAG, "start time = " + Utils.dateIntegerToString(meeting.getStartTime()));
+        Log.e(TAG, "end time = " + Utils.dateIntegerToString(meeting.getEndTime()));
+        Log.e(TAG, "address = " + meeting.getAddress());
+        Log.e(TAG, "latitude = " + meeting.getLatitude());
+        Log.e(TAG, "longitude = " + meeting.getLongitude());
+        Log.e(TAG, "participants = " + meeting.getStringParticipants());
+        for(int i = 0; i < meeting.getParticipantList().size() ; i ++)
+        {
+            Log.e(TAG, "participants = " + meeting.getParticipantList().get(i));
+        }*/
+
         MeetingService.createMeeting(getBaseContext(), meeting, true);
+    }
 
-
+    public boolean checkAllInput()
+    {
+        if(!(etMeetingName.getText().toString().isEmpty()) &&
+                !(tvDate.getText().toString().isEmpty()) &&
+                !(tvTimefrom.getText().toString().isEmpty()) &&
+                !(tvTimeto.getText().toString().isEmpty()) &&
+                !(tv_selected_location.getText().toString().isEmpty()) &&
+                !(tvGuestList.getText().toString().isEmpty())){
+            return true;
+        }
+        return false;
     }
 
     private List<String> getParticipantListID()
     {
-        List<String> partcipantListID = null;
+        List<String> partcipantListID = new ArrayList<>();
 
         String [] idArray = strParticipantIdList.split(", ");
         for(int i = 0; i < idArray.length ; i ++)
         {
             partcipantListID.add(idArray[i]);
         }
-
         return partcipantListID;
     }
 
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_ADD_GUESTS) {
-
-            guestNames = data.getStringExtra(AddGuestsActivity.GUEST_NAMES_TAG);
-            strParticipantIdList = data.getStringExtra(AddGuestsActivity.GUEST_LIST_TAG);
-            Log.e(TAG, strParticipantIdList);
-            tvGuestList.setText(guestNames);
-
-        } else if (requestCode == PLACE_PICKER_REQUEST) {
-            switch (resultCode) {
-                case RESULT_OK:
-
-                    place = PlacePicker.getPlace(getBaseContext(), data);
-
-                    String finalAddress;
-
-                    // check if coordinates
-                    if (place.getName().toString().contains("°")) {
-                        finalAddress = place.getAddress().toString();
-                    } else {
-                        finalAddress = place.getName().toString() + ", " +
-                                place.getAddress().toString();
-                    }
-
-                    String toastMsg = String.format("Place: %s", finalAddress);
-                    Toast.makeText(this, toastMsg, Toast.LENGTH_LONG).show();
-
-                    tv_selected_location.setText(finalAddress);
-                    tv_selected_location.setVisibility(View.VISIBLE);
-
-                    break;
-                case RESULT_CANCELED:
-                    break;
-            }
-        }
-    }
 }

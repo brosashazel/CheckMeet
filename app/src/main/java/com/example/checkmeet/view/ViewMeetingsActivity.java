@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import com.example.checkmeet.R;
 import com.example.checkmeet.adapter.MeetingsPagerAdapter;
+import com.example.checkmeet.sms.SMSServiceRECEIVE;
 
 public class ViewMeetingsActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -82,6 +83,10 @@ public class ViewMeetingsActivity extends AppCompatActivity
                 viewPager.setCurrentItem(tab.getPosition());
             }
         });
+
+        // start service
+        Intent intent = new Intent(this, SMSServiceRECEIVE.class);
+        startService(intent);
     }
 
     @Override

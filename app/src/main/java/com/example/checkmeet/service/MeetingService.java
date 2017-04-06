@@ -10,6 +10,7 @@ import com.example.checkmeet.db.DatabaseHelper;
 import com.example.checkmeet.model.Date;
 import com.example.checkmeet.model.Group;
 import com.example.checkmeet.model.Meeting;
+import com.example.checkmeet.model.Status;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,17 +23,26 @@ public class MeetingService {
 
     /**
      * Create meeting
+     *
      * @param context
      * @param meeting details of the meeting must be complete
-     * @param isHost true if HOST, false if NOT HOST
+     * @param isHost  true if HOST, false if NOT HOST
      * @return
      */
     public static long createMeeting(Context context, Meeting meeting, boolean isHost) {
+
+        // DEVICE_ID IS IMEI ID FIRST
+        // IT WILL BE CONCATENATED ONCE THE MEETING ID IS GENERATED
+
         SQLiteDatabase db = DatabaseHelper.getInstance(context).getWritableDatabase();
 
         ///// meeting table /////
         ContentValues contentValues = new ContentValues();
+
+        // title
         contentValues.put(Meeting.COL_TITLE, meeting.getTitle());
+
+        // date and time
         contentValues.put(Meeting.COL_DATE, meeting.getDate().toMilliseconds());
         contentValues.put(Meeting.COL_TIMESTART, meeting.getStartTime());
         contentValues.put(Meeting.COL_TIMEEND, meeting.getEndTime());
@@ -46,13 +56,13 @@ public class MeetingService {
         contentValues.put(Meeting.COL_COLOR, meeting.getColor());
 
         // description is optional
-        if(meeting.getDescription() != null) {
+        if (meeting.getDescription() != null) {
             contentValues.put(Meeting.COL_DESCRIPTION, meeting.getDescription());
         }
 
         // host
         contentValues.put(Meeting.COL_HOST_NAME, meeting.getHostName());
-        if(isHost) {
+        if (isHost) {
             contentValues.put(Meeting.COL_IS_HOST, Meeting.FLAG_IS_HOST);
         } else {
             contentValues.put(Meeting.COL_IS_HOST, Meeting.FLAG_IS_NOT_HOST);
@@ -64,14 +74,33 @@ public class MeetingService {
         // notes
         contentValues.put(Meeting.COL_NOTES, "");
 
+        // status
+        contentValues.put(Meeting.COL_STATUS, Status.PENDING.name());
+
         // store to DB, get ID
         long result = db.insert(Meeting.TABLE_NAME, null, contentValues);
 
+
+        String selection = Meeting.COL_MEETINGID + " = ?";
+
+        String[] selectionArgs = {result + ""};
+        contentValues = new ContentValues();
+
+        // device_id
+        if (isHost) {
+            contentValues.put(Meeting.COL_DEVICE_ID, meeting.getDevice_id() + "-" + result);
+        } else {
+            contentValues.put(Meeting.COL_DEVICE_ID, meeting.getDevice_id());
+        }
+
+        db.update(Meeting.TABLE_NAME, contentValues, selection, selectionArgs);
+
+
         // only the host will have participants linked to the contacts app of his own phone
-        if(isHost) {
+        if (isHost) {
             ///// meeting_participants table /////
             List<String> participantList = meeting.getParticipantList();
-            for (int i = 0; i < participantList.size(); i ++) {
+            for (int i = 0; i < participantList.size(); i++) {
                 contentValues = new ContentValues();
                 contentValues.put(Meeting.MEETING_PARTICIPANTS_COL_MEETINGID, result);
                 contentValues.put(Meeting.MEETING_PARTICIPANTS_COL_PARTICIPANTID,
@@ -108,7 +137,7 @@ public class MeetingService {
         contentValues.put(Meeting.COL_HOST_NAME, meeting.getHostName());
         contentValues.put(Meeting.COL_COLOR, meeting.getColor());
 
-        if(meeting.getDescription() != null) {
+        if (meeting.getDescription() != null) {
             contentValues.put(Meeting.COL_DESCRIPTION, meeting.getDescription());
         }
 
@@ -124,9 +153,9 @@ public class MeetingService {
      * Participant String format: participant1, participant2, participant3, participant4
      */
     public static void updateMeetingParticipants(Context context,
-                                                List<String> participantList,
+                                                 List<String> participantList,
                                                  String participantString,
-                                                long meeting_id) {
+                                                 long meeting_id) {
 
         SQLiteDatabase db = DatabaseHelper.getInstance(context).getWritableDatabase();
 
@@ -138,7 +167,7 @@ public class MeetingService {
 
         // add new participants
         ContentValues contentValues;
-        for(int i = 0; i < participantList.size(); i ++) {
+        for (int i = 0; i < participantList.size(); i++) {
             contentValues = new ContentValues();
             contentValues.put(Meeting.MEETING_PARTICIPANTS_COL_MEETINGID, meeting_id);
             contentValues.put(Meeting.MEETING_PARTICIPANTS_COL_PARTICIPANTID,
@@ -191,6 +220,31 @@ public class MeetingService {
         int result = db.update(Meeting.TABLE_NAME, contentValues, selection, selectionArgs);
 
         Log.e("MeetingService", "result = " + result);
+
+        db.close();
+    }
+
+    /**
+     * cancels the meeting
+     * if HOST: find meetingID
+     * if PARTICIPANT: find imei id of host
+     */
+    public static void cancelMeeting(Context context, long id, boolean isHost) {
+        SQLiteDatabase db = DatabaseHelper.getInstance(context).getWritableDatabase();
+
+        String selection;
+        String[] selectionArgs = {id + ""};
+        ContentValues contentValues = new ContentValues();
+
+        if (isHost) {
+            selection = Meeting.COL_MEETINGID + " = ?";
+        } else {
+            selection = Meeting.COL_DEVICE_ID + " = ?";
+        }
+
+        contentValues.put(Meeting.COL_STATUS, Status.CANCELLED.name());
+
+        db.update(Meeting.TABLE_NAME, contentValues, selection, selectionArgs);
 
         db.close();
     }
@@ -255,13 +309,19 @@ public class MeetingService {
         Cursor cursor = db.query(
                 Meeting.TABLE_NAME, null, selection, selectionArgs, null, null, null);
 
-        if(cursor.moveToFirst()) {
+        if (cursor.moveToFirst()) {
 
             // meeting
             meeting = new Meeting();
 
+            // id
             meeting.setMeeting_id(cursor.getInt(cursor.getColumnIndex(Meeting.COL_MEETINGID)));
+            meeting.setDevice_id(cursor.getString(cursor.getColumnIndex(Meeting.COL_DEVICE_ID)));
+
+            // title
             meeting.setTitle(cursor.getString(cursor.getColumnIndex(Meeting.COL_TITLE)));
+
+            // date and time
             meeting.setDate(new Date(cursor.getLong(cursor.getColumnIndex(Meeting.COL_DATE))));
             meeting.setStartTime(cursor.getInt(cursor.getColumnIndex(Meeting.COL_TIMESTART)));
             meeting.setEndTime(cursor.getInt(cursor.getColumnIndex(Meeting.COL_TIMEEND)));
@@ -270,7 +330,7 @@ public class MeetingService {
             meeting.setHostName(cursor.getString(cursor.getColumnIndex(Meeting.COL_HOST_NAME)));
             int isHost = cursor.getInt(cursor.getColumnIndex(Meeting.COL_IS_HOST));
 
-            if(isHost == 1) {
+            if (isHost == 1) {
                 meeting.setIsHost(true);
             } else {
                 meeting.setIsHost(false);
@@ -285,7 +345,7 @@ public class MeetingService {
             meeting.setColor(cursor.getInt(cursor.getColumnIndex(Meeting.COL_COLOR)));
 
             // description is optional
-            if(cursor.getString(cursor.getColumnIndex(Meeting.COL_DESCRIPTION)) != null) {
+            if (cursor.getString(cursor.getColumnIndex(Meeting.COL_DESCRIPTION)) != null) {
                 meeting.setDescription(cursor.getString(
                         cursor.getColumnIndex(Meeting.COL_DESCRIPTION)));
             }
@@ -297,41 +357,40 @@ public class MeetingService {
             // notes
             meeting.setNotes(cursor.getString(cursor.getColumnIndex(Meeting.COL_NOTES)));
 
+            // status
+            meeting.setStatus(
+                    Status.getValue(cursor.getString(cursor.getColumnIndex(Meeting.COL_STATUS))));
+
         }
 
         cursor.close();
 
         // get participants if host
-        if(meeting != null && meeting.isHost()) {
+        if (meeting != null && meeting.isHost()) {
 
-            if(meeting.getStringParticipants() == null) {
-                String[] projection = {
-                        Group.GROUP_PARTICIPANT_COL_PARTICIPANTID
-                };
+            String tables = Meeting.TABLE_NAME_MEETING_PARTICIPANTS;
 
-                selection =
-                        Meeting.TABLE_NAME + "." + Meeting.COL_MEETINGID + " = ? AND " +
-                        Meeting.TABLE_NAME + "." + Meeting.COL_MEETINGID + " = " +
-                        Meeting.TABLE_NAME_MEETING_PARTICIPANTS + "." + Meeting.COL_MEETINGID;
+            selection =
+                    Meeting.MEETING_PARTICIPANTS_COL_MEETINGID + " = ?";
 
-                selectionArgs = new String[]{id + ""};
+            selectionArgs = new String[]{id + ""};
 
-                cursor = db.query(Meeting.TABLE_NAME_MEETING_PARTICIPANTS,
-                        projection, selection, selectionArgs, null, null, null);
+            cursor = db.query(tables, null, selection, selectionArgs, null, null, null)
+            ;
 
-                List<String> participantList = new ArrayList<>();
-                String p;
-                while(cursor.moveToNext()) {
-                    p = cursor.getString(
-                            cursor.getColumnIndex(Group.GROUP_PARTICIPANT_COL_PARTICIPANTID));
+            List<String> participantList = new ArrayList<>();
+            String p;
+            while (cursor.moveToNext()) {
+                p = cursor.getString(
+                        cursor.getColumnIndex(Meeting.MEETING_PARTICIPANTS_COL_PARTICIPANTID));
 
-                    participantList.add(p);
-                }
-
-                meeting.setParticipantList(participantList);
-
-                cursor.close();
+                Log.e("getMeeting", "adding participant " + p);
+                participantList.add(p);
             }
+
+            meeting.setParticipantList(participantList);
+
+            cursor.close();
 
         }
 
@@ -339,5 +398,4 @@ public class MeetingService {
 
         return meeting;
     }
-
 }
