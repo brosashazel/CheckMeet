@@ -22,6 +22,7 @@ import com.example.checkmeet.R;
 import com.example.checkmeet.adapter.ContactListsAdapter;
 import com.example.checkmeet.model.Contact;
 import com.example.checkmeet.model.Group;
+import com.example.checkmeet.service.ContactService;
 import com.example.checkmeet.service.GroupService;
 
 import java.util.ArrayList;
@@ -126,14 +127,20 @@ public class ViewGroupActivity extends AppCompatActivity {
 
         // get details of participants from default contacts app
         Random rand = new Random();
-        boolean isContactFound;
         int counter = 0;
 
-        for(int i = 0; i < group.getMemberList().size(); i ++) {
-            isContactFound =
-                    findContact(group.getMemberList().get(i), colors.get(rand.nextInt(5)));
+        Contact c;
 
-            if(!isContactFound) counter++;
+        for(int i = 0; i < group.getMemberList().size(); i++) {
+            c = ContactService.searchContact(getBaseContext(), group.getMemberList().get(i),
+                    colors.get(rand.nextInt(5)));
+
+            if(c == null) {
+                counter++;
+            } else {
+                contactList.add(c);
+                participant_id_list.add(c.getContactID());
+            }
         }
 
         if(counter > 0) {
@@ -144,65 +151,7 @@ public class ViewGroupActivity extends AppCompatActivity {
             GroupService.updateGroup(getBaseContext(), group);
         }
 
-    }  private boolean findContact(String member_id, int color) {
-
-        ContentResolver cr = getBaseContext().getContentResolver();
-        Contact c;
-
-        Cursor cur = cr.query(
-                ContactsContract.Contacts.CONTENT_URI,
-                null,
-                ContactsContract.Contacts._ID + " = ?",
-                new String[]{member_id},
-                null);
-
-        if (cur != null && cur.getCount() > 0) {
-            while (cur.moveToNext()) {
-
-                c = new Contact();
-
-                String id = cur.getString(
-                        cur.getColumnIndex(ContactsContract.Contacts._ID));
-                String name = cur.getString(cur.getColumnIndex(
-                        ContactsContract.Contacts.DISPLAY_NAME));
-
-                c.setContactID(id);
-                c.setName(name);
-                c.setColor(color);
-
-                if (cur.getInt(cur.getColumnIndex(
-                        ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0) {
-                    Cursor pCur = cr.query(
-                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                            null,
-                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID +" = ?",
-                            new String[]{id}, null);
-                    if (pCur != null && pCur.moveToFirst()) {
-                        String phoneNo = pCur.getString(pCur.getColumnIndex(
-                                ContactsContract.CommonDataKinds.Phone.NUMBER));
-
-                        Log.e("ViewAllContactsFragment", "Name: " + name
-                                + ", Phone No: " + phoneNo + "\t\tID: " + id);
-
-                        c.setNumber(phoneNo);
-
-                        pCur.close();
-                    }
-                }
-
-                contactList.add(c);
-                participant_id_list.add(c.getContactID());
-            }
-
-            cur.close();
-            return true;
-
-        }
-
-        return false;
     }
-
-
 
     private void showAlert() {
         // show alert

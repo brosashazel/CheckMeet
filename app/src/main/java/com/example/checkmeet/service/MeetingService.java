@@ -11,6 +11,7 @@ import com.example.checkmeet.model.Date;
 import com.example.checkmeet.model.Group;
 import com.example.checkmeet.model.Meeting;
 import com.example.checkmeet.model.Status;
+import com.example.checkmeet.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,8 @@ import java.util.List;
  */
 
 public class MeetingService {
+
+    private static final String TAG = "MeetingService";
 
     /**
      * Create meeting
@@ -89,6 +92,7 @@ public class MeetingService {
         // device_id
         if (isHost) {
             contentValues.put(Meeting.COL_DEVICE_ID, meeting.getDevice_id() + "-" + result);
+            Log.e("createMeeting", "device id == " + meeting.getDevice_id() + "-" + result);
         } else {
             contentValues.put(Meeting.COL_DEVICE_ID, meeting.getDevice_id());
         }
@@ -118,11 +122,19 @@ public class MeetingService {
      * This will only be called if host changes something about the details of the meeting
      * EXCLUDING the guest list
      */
-    public static int updateMeeting(Context context, Meeting meeting) {
+    public static int updateMeeting(Context context, Meeting meeting, boolean isHost) {
         SQLiteDatabase db = DatabaseHelper.getInstance(context).getWritableDatabase();
+        Log.e("DB", "EDITING THE MEETING NOW");
+        String selection;
+        String[] selectionArgs = new String[1];
 
-        String selection = Meeting.COL_MEETINGID + " = ?";
-        String[] selectionArgs = {meeting.getMeeting_id() + ""};
+        if(isHost) {
+            selection = Meeting.COL_MEETINGID + " = ?";
+            selectionArgs[0] = meeting.getMeeting_id() + "";
+        } else {
+            selection = Meeting.COL_DEVICE_ID + " = ?";
+            selectionArgs[0] = meeting.getDevice_id() + "";
+        }
 
         ///// meeting table /////
         // update all attributes
@@ -141,8 +153,18 @@ public class MeetingService {
             contentValues.put(Meeting.COL_DESCRIPTION, meeting.getDescription());
         }
 
+        Log.e(TAG, "id = " + meeting.getMeeting_id());
+        Log.e(TAG, "title = " + meeting.getTitle());
+        Log.e(TAG, "description = " + meeting.getDescription());
+        Log.e(TAG, "date = " + meeting.getDate().toString());
+        Log.e(TAG, "start time = " + Utils.dateIntegerToString(meeting.getStartTime()));
+        Log.e(TAG, "end time = " + Utils.dateIntegerToString(meeting.getEndTime()));
+        Log.e(TAG, "address = " + meeting.getAddress());
+        Log.e(TAG, "latitude = " + meeting.getLatitude());
+        Log.e(TAG, "longitude = " + meeting.getLongitude());
+        Log.e(TAG, "participants = " + meeting.getStringParticipants());
         int result = db.update(Meeting.TABLE_NAME, contentValues, selection, selectionArgs);
-
+        Log.e(TAG, "result = " + result);
         db.close();
 
         return result;
@@ -229,15 +251,16 @@ public class MeetingService {
      * if HOST: find meetingID
      * if PARTICIPANT: find imei id of host
      */
-    public static void cancelMeeting(Context context, long id, boolean isHost) {
+    public static void cancelMeeting(Context context, String id, boolean isHost) {
         SQLiteDatabase db = DatabaseHelper.getInstance(context).getWritableDatabase();
 
         String selection;
-        String[] selectionArgs = {id + ""};
+        String[] selectionArgs = {id};
         ContentValues contentValues = new ContentValues();
 
         if (isHost) {
             selection = Meeting.COL_MEETINGID + " = ?";
+            selectionArgs[0] = Long.parseLong(id) + "";
         } else {
             selection = Meeting.COL_DEVICE_ID + " = ?";
         }

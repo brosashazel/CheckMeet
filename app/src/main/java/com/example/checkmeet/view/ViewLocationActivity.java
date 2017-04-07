@@ -4,6 +4,7 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 
 import com.example.checkmeet.R;
+import com.example.checkmeet.model.Meeting;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -16,6 +17,7 @@ public class ViewLocationActivity extends FragmentActivity implements OnMapReady
     private double latitude;
     private double longitude;
     private String address;
+    private String title;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,9 +29,10 @@ public class ViewLocationActivity extends FragmentActivity implements OnMapReady
         mapFragment.getMapAsync(this);
 
         // get latitude and longitude and address
-        latitude = getIntent().getDoubleExtra(ViewMeetingActivity.EXTRA_LATITUDE, -1);
-        longitude = getIntent().getDoubleExtra(ViewMeetingActivity.EXTRA_LONGITUDE, -1);
-        address = getIntent().getStringExtra(ViewMeetingActivity.EXTRA_ADDRESS);
+        latitude = getIntent().getDoubleExtra(Meeting.COL_LATITUDE, -1);
+        longitude = getIntent().getDoubleExtra(Meeting.COL_LONGITUDE, -1);
+        address = getIntent().getStringExtra(Meeting.COL_ADDRESS);
+        title = getIntent().getStringExtra(Meeting.COL_TITLE);
     }
 
 
@@ -44,22 +47,22 @@ public class ViewLocationActivity extends FragmentActivity implements OnMapReady
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        GoogleMap mMap = googleMap;
 
         LatLng addressLatLng = new LatLng(latitude, longitude);
 
         // Add a marker in specified location
-        mMap.addMarker(new MarkerOptions()
+        googleMap.addMarker(new MarkerOptions()
                 .position(addressLatLng)
-                .title(address)
+                .title(title)
+                .snippet(address)
         );
 
         // move camera
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(addressLatLng,15));
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(addressLatLng,15));
         // Zoom in, animating the camera.
-        mMap.animateCamera(CameraUpdateFactory.zoomIn());
+        googleMap.animateCamera(CameraUpdateFactory.zoomIn());
         // Zoom out to zoom level 10, animating with a duration of 2 seconds.
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(17), 2000, null);
+        googleMap.animateCamera(CameraUpdateFactory.zoomTo(17), 2000, null);
 
     }
 }

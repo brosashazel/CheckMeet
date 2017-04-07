@@ -88,7 +88,7 @@ public class Utils {
         return time % 100;
     }
 
-    public static String monthIntToString(int month) {
+    private static String monthIntToString(int month) {
         switch (month) {
             case 0: return "January";
             case 1: return "February";
@@ -123,13 +123,30 @@ public class Utils {
         }
     }
 
-    public static Meeting parseText(String text)
+    public static String getCKMTcode(String text)
     {
-        Meeting meeting = new Meeting();
-        //TODO: PARSING HERE
-        String ckmtCode;
         String [] textParts = text.split("__________");
-        String [] meetingDetails = textParts[1].split("$&");
+        return (String) textParts[0].subSequence(0, 10);
+    }
+
+    public static String parseCancelText(String text)
+    {
+        String [] textParts = text.split("__________");
+        String [] cancel_id = textParts[1].split("&&&");
+        return cancel_id[0];
+    }
+
+    public static Meeting parseCreateEditText(String text)
+    {
+        //Log.e(TAG, "TEXT: " + text);
+        Meeting meeting = new Meeting();
+        String [] textParts = text.split("__________");
+        String [] meetingDetails = textParts[1].split("&&&|\\$&");
+        for(int i = 0; i < meetingDetails.length ; i++)
+        {
+            Log.e(TAG, "MEETING DETAILS" +  meetingDetails[i]);
+        }
+
         String [] dateParts = meetingDetails[2].split("/");
         int meetingDetailsCount = meetingDetails.length;
 
@@ -138,13 +155,13 @@ public class Utils {
         //Meeting Name
         meeting.setTitle(meetingDetails[1]);
         //Meeting Date
-        meeting.setDate(new com.example.checkmeet.model.Date(Integer.parseInt(dateParts[0]),
+        meeting.setDate(new com.example.checkmeet.model.Date(Integer.parseInt(dateParts[0]) - 1,
                 Integer.parseInt(dateParts[1]),
                 Integer.parseInt(dateParts[2])));
         //Meeting  Time From
-        meeting.setStartTime(dateStringToInteger(meetingDetails[3]));
+        meeting.setStartTime(Integer.parseInt(meetingDetails[3]));
         //Meeting Time To
-        meeting.setEndTime(dateStringToInteger(meetingDetails[4]));
+        meeting.setEndTime(Integer.parseInt(meetingDetails[4]));
         //Meeting Address
         meeting.setAddress(meetingDetails[5]);
         //Meeting Latitude
@@ -158,8 +175,23 @@ public class Utils {
         //Meeting Color
         meeting.setColor(Integer.parseInt(meetingDetails[10]));
         //Meeting Description
+        Log.e(TAG,"Detail count " + meetingDetailsCount);
         if(meetingDetailsCount == 12)
             meeting.setDescription(meetingDetails[11]);
+
+        Log.e(TAG, "deviceId = " + meeting.getDevice_id());
+        Log.e(TAG, "title = " + meeting.getTitle());
+        Log.e(TAG, "description = " + meeting.getDescription());
+        Log.e(TAG, "date = " + meeting.getDate().toString());
+        Log.e(TAG, "start time = " + meeting.getStartTime());
+        Log.e(TAG, "end time = " + meeting.getEndTime());
+        Log.e(TAG, "address = " + meeting.getAddress());
+        Log.e(TAG, "latitude = " + meeting.getLatitude());
+        Log.e(TAG, "longitude = " + meeting.getLongitude());
+        Log.e(TAG, "nts = " + meeting.getStringParticipants());
+
+
+
 
         return meeting;
     }
@@ -188,6 +220,8 @@ public class Utils {
         }
 
         smsManager.sendMultipartTextMessage(phoneNumber, null, messages, sentIntents, null);
+
+        Log.e("sendsmsparticipant", "phoneNumber = " + phoneNumber);
     }
 
     private static String findPhoneNumber(Context context, String participant_id) {

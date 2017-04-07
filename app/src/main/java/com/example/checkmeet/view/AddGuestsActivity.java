@@ -31,9 +31,11 @@ import com.example.checkmeet.R;
 import com.example.checkmeet.adapter.AddGuestsPagerAdapter;
 import com.example.checkmeet.model.Contact;
 import com.example.checkmeet.model.Group;
+import com.example.checkmeet.service.ContactService;
 import com.example.checkmeet.service.GroupService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -73,6 +75,7 @@ public class AddGuestsActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         participant_id_list = new ArrayList<>();
+
         // get participant_id_list from edit activity
         String participantList = getIntent().getStringExtra(
                 EditMeetingActivity.EXTRA_PARTICIPANT_LIST);
@@ -100,11 +103,7 @@ public class AddGuestsActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-
-        Log.e(TAG, "BEFORE inflating cancel_save_menu");
         getMenuInflater().inflate(R.menu.cancel_save_menu, menu);
-        Log.e(TAG, "inflating cancel_save_menu");
-
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -173,13 +172,13 @@ public class AddGuestsActivity extends AppCompatActivity {
         // must return RESULT_OK to previous activity
         String nameList = getStrParticipantListNames();
         String idList = getStrParticipantListID();
-        if(nameList != "" && idList != "") {
+        if(nameList.isEmpty() && idList.isEmpty()) {
             getIntent().putExtra(GUEST_NAMES_TAG, nameList);
             getIntent().putExtra(GUEST_LIST_TAG, idList);
             setResult(RESULT_OK, getIntent());
             finish();
             Toast.makeText(getBaseContext(), "Saving Guests Added", Toast.LENGTH_SHORT).show();
-        }else{
+        } else{
             showAlertDialog("Sorry, your meeting should at least have 1 participant.");
         }
     }
@@ -199,14 +198,13 @@ public class AddGuestsActivity extends AppCompatActivity {
     }
     private String getStrParticipantListNames()
     {
-        //TODO: Gather all participant names with delimeter (,)
-        //TODO: Go through all the paticipant id. get each name from db then append to  "strPartcipantList"
         if(!participant_id_list.isEmpty()) {
             String strPartcipantList = getContactName(participant_id_list.get(0));
 
             for (int i = 1; i < participant_id_list.size(); i++) {
                 strPartcipantList += ", " + getContactName(participant_id_list.get(i));
             }
+
             //Check view group activity to see how contacts are retrieved.
             return strPartcipantList;
         }
@@ -216,27 +214,8 @@ public class AddGuestsActivity extends AppCompatActivity {
     }
 
     private String getContactName(String member_id) {
-
-        ContentResolver cr = getBaseContext().getContentResolver();
-        String name = null;
-
-        Cursor cur = cr.query(
-                ContactsContract.Contacts.CONTENT_URI,
-                null,
-                ContactsContract.Contacts._ID + " = ?",
-                new String[]{member_id},
-                null);
-
-        if (cur != null && cur.getCount() > 0) {
-            while (cur.moveToNext()) {
-                name = cur.getString(cur.getColumnIndex(
-                        ContactsContract.Contacts.DISPLAY_NAME));
-            }
-
-            cur.close();
-        }
-
-        return name;
+        Contact c = ContactService.searchContact(getBaseContext(), member_id, 0);
+        return c.getName();
     }
 
     public void addParticipantID(String participant_id) {
@@ -259,22 +238,22 @@ public class AddGuestsActivity extends AppCompatActivity {
         if(!participantList.isEmpty()) {
             String[] tokens = participantList.split(", ");
 
-            for(int i =0; i < tokens.length; i ++) {
-                participant_id_list.add(tokens[i]);
-            }
+            Collections.addAll(participant_id_list, tokens);
         }
     }
 
     public void showAlertDialog(String msg)
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-// Add the buttons
+
+        // Add the buttons
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
             }
         });
         builder.setMessage(msg);
-// Create the AlertDialog
+
+        // Create the AlertDialog
         AlertDialog dialog = builder.create();
 
         dialog.show();

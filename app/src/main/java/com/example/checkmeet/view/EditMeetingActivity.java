@@ -3,17 +3,12 @@ package com.example.checkmeet.view;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
-import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.TypefaceSpan;
@@ -28,7 +23,6 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.checkmeet.adapter.AddedGuestsAdapter;
 import com.example.checkmeet.model.Date;
 import com.example.checkmeet.model.Meeting;
 import com.example.checkmeet.service.MeetingService;
@@ -37,7 +31,6 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
-import com.google.android.gms.maps.model.LatLngBounds;
 import com.thebluealliance.spectrum.SpectrumPalette;
 import com.example.checkmeet.R;
 import com.wdullaer.materialdatetimepicker.date.DatePickerDialog;
@@ -45,9 +38,11 @@ import com.wdullaer.materialdatetimepicker.time.TimePickerDialog;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 
-public class EditMeetingActivity extends AppCompatActivity implements SpectrumPalette.OnColorSelectedListener,
+public class EditMeetingActivity extends AppCompatActivity implements
+        SpectrumPalette.OnColorSelectedListener,
         View.OnClickListener,
         DatePickerDialog.OnDateSetListener,
         TimePickerDialog.OnTimeSetListener {
@@ -86,10 +81,7 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
     private double latitude;
     private double longitude;
     private String guestNames;
-    private Place place;
 
-    public static Typeface tf_roboto;
-    private ActionBar actionBar;
     private int isToday;
 
     private Meeting meeting;
@@ -98,10 +90,9 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_meeting);
-        // initData
+
         int meeting_id =
-                Integer.parseInt(getIntent().getStringExtra(ViewMeetingActivity.EXTRA_MEETING_ID));
-        String address = getIntent().getStringExtra(ViewMeetingActivity.EXTRA_ADDRESS);
+                Integer.parseInt(getIntent().getStringExtra(Meeting.COL_MEETINGID));
         meeting = MeetingService.getMeeting(getBaseContext(), meeting_id);
 
         initView();
@@ -153,14 +144,9 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
         tv_selected_location.setText(meeting.getAddress());
         tv_selected_location.setVisibility(View.VISIBLE);
 
-        palette.setOnColorSelectedListener(this);
-        btnOpenCalendar.setOnClickListener(this);
-        btnOpenFromTime.setOnClickListener(this);
-        btnOpenToTime.setOnClickListener(this);
-        btnAddGuests.setOnClickListener(this);
-        btnPickLocation.setOnClickListener(this);
+        setListeners();
 
-        String name = "Edit Meeting"; // your string here
+        String name = "Edit Meeting";
         SpannableString s = new SpannableString(name);
         s.setSpan(new TypefaceSpan("fonts/rancho_regular.ttf"), 0, s.length(),
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -175,6 +161,16 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.setStatusBarColor(Utils.getDarkColor(meeting.getColor()));
         }
+    }
+
+    private void setListeners()
+    {
+        palette.setOnColorSelectedListener(this);
+        btnOpenCalendar.setOnClickListener(this);
+        btnOpenFromTime.setOnClickListener(this);
+        btnOpenToTime.setOnClickListener(this);
+        btnAddGuests.setOnClickListener(this);
+        btnPickLocation.setOnClickListener(this);
     }
 
     @Override
@@ -206,7 +202,7 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
             switch(resultCode) {
                 case RESULT_OK:
 
-                    place = PlacePicker.getPlace(getBaseContext(), data);
+                    Place place = PlacePicker.getPlace(getBaseContext(), data);
 
                     String finalAddress;
 
@@ -217,9 +213,6 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
                         finalAddress = place.getName().toString() + ", " +
                                 place.getAddress().toString();
                     }
-
-                    String toastMsg = String.format("Place: %s", finalAddress);
-                    Toast.makeText(this, toastMsg, Toast.LENGTH_LONG).show();
 
                     address = (String) place.getAddress();
                     latitude = place.getLatLng().latitude;
@@ -249,16 +242,18 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
 
         switch (id) {
             case R.id.action_cancel:
+                Toast.makeText(getBaseContext(), "Editing Meeting Canceled",
+                        Toast.LENGTH_LONG).show();
+                super.onBackPressed();
                 break;
             case R.id.action_save:
                 if(checkAllInput())
-                    updateMeeting();
+                    showAlertEdit();
                 else
                     showAlertDialog("Please fill up all necessary details.", 0);
 
         }
 
-        super.onBackPressed();
         return super.onOptionsItemSelected(item);
     }
 
@@ -279,7 +274,8 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
     public void showAlertDialog(String msg, final int resumeDialog)
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-// Add the buttons
+
+        // Add the buttons
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 if(resumeDialog == 1)
@@ -291,6 +287,7 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
             }
         });
         builder.setMessage(msg);
+
         // Create the AlertDialog
         AlertDialog dialog = builder.create();
 
@@ -325,6 +322,9 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
             } catch (GooglePlayServicesRepairableException |
                     GooglePlayServicesNotAvailableException e) {
                 e.printStackTrace();
+
+                Toast.makeText(this,
+                        "Your Google Play services is not updated.", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -332,7 +332,6 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
     //////////////////////////////////////// SETTING MEETING TIME /////////////////////////////////
 
     public void showTimePicker(int tofromtime) {
-        Calendar now = Calendar.getInstance();
         int hour;
         int min;
 
@@ -377,7 +376,8 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
                 showTimePicker(1);
             }else
             {
-                showAlertDialog("Sorry, the time you entered has already passed. Please choose a later time.", 2);
+                showAlertDialog("Sorry, the time you entered has already passed. " +
+                        "Please choose a later time.", 2);
             }
         }else{
             if (isTimeValid(fromHour, hourOfDay, fromMinute, minute)) {
@@ -385,7 +385,8 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
                 toHour = hourOfDay;
                 toMinute = minute;
             } else {
-                showAlertDialog("Sorry, CheckMeet only accepts meetings that are within the day.", 1);
+                showAlertDialog(
+                        "Sorry, CheckMeet only accepts meetings that are within the day.", 1);
 
             }
         }
@@ -397,37 +398,9 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
         else if (fromHourOfDay < toHourOfDay) {
             return true;
         } else if (fromHourOfDay == toHourOfDay) {
-            if (fromMinute > toMinute)
-                return false;
-            else
-                return true;
+            return fromMinute <= toMinute;
         }
         return false;
-    }
-
-    public String convertTimeToString(int hourOfDay, int minute) {
-        String partOfDay;
-        String strTime;
-        if (hourOfDay - 12 <= 0)
-            partOfDay = "AM";
-        else
-            partOfDay = "PM";
-
-        if (hourOfDay % 12 == 0)
-            hourOfDay = 12;
-        else
-            hourOfDay = hourOfDay % 12;
-
-        String hr = String.valueOf(hourOfDay);
-        String min = String.valueOf(minute);
-
-        if (hourOfDay < 10)
-            hr = "0" + hr;
-        if (minute < 10)
-            min = "0" + min;
-
-        strTime = hr + ":" + min + "  " + partOfDay;
-        return strTime;
     }
 
     public boolean checkTimeOfDay(int hour, int min) {
@@ -437,10 +410,7 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
         else if (now.get(Calendar.HOUR_OF_DAY) < hour) {
             return true;
         } else if (now.get(Calendar.HOUR_OF_DAY) == hour) {
-            if (now.get(Calendar.MINUTE) > min)
-                return false;
-            else
-                return true;
+            return now.get(Calendar.MINUTE) <= min;
         }
         return false;
     }
@@ -486,6 +456,61 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
 
     //////////////////////////////////////// EDITING MEETING /////////////////////////////////
 
+    private void showAlertEdit() {
+        String message = "You are about to send " + getParticipantListID().size()
+                + " SMS. Do you want to proceed editing a meeting?";
+
+        String title = "Edit meeting?";
+
+        // show alert
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+
+        // set title
+        alertDialogBuilder.setTitle(title);
+        alertDialogBuilder.setMessage(message);
+
+        // set dialog message
+        alertDialogBuilder
+                .setCancelable(true)
+                .setPositiveButton("PROCEED", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+
+                        // update db
+                        updateMeeting();
+
+                        // send sms to participants
+                        String msg = generateSMS();
+                        Log.e(TAG, "SMS = \n" + msg);
+                        Utils.sendSMS(getBaseContext(), msg, getParticipantListID());
+
+                        // tell user
+                        Toast.makeText(getBaseContext(),
+                                "Meeting has been edited!", Toast.LENGTH_LONG).show();
+
+                        // view created meeting
+                        onBackPressed();
+
+                    }
+                })
+                .setNegativeButton("GO BACK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                })
+                .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        dialog.cancel();
+                    }
+                });
+
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+
+        // show it
+        alertDialog.show();
+    }
+
     public void updateMeeting() {
         String[] dateParts = tvDate.getText().toString().split("/");
         meeting.setTitle(etMeetingName.getText().toString());
@@ -517,16 +542,7 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
         Log.e(TAG, "longitude = " + meeting.getLongitude());
         Log.e(TAG, "participants = " + meeting.getStringParticipants());
 
-        Log.e(TAG, MeetingService.updateMeeting(getBaseContext(), meeting)  + "");
-    }
-
-    private String getParticipantList() {
-        String participantList = meeting.getParticipantList().get(0);
-
-        for(int i = 0; i < meeting.getParticipantList().size(); i ++) {
-            participantList.concat(", " + meeting.getParticipantList().get(i));
-        }
-        return participantList;
+        Log.e(TAG, MeetingService.updateMeeting(getBaseContext(), meeting, true)  + "");
     }
 
     private void generateParticipantIdString()
@@ -535,10 +551,7 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
         strParticipantIdList = partcipantListID.get(0);
         for(int i = 1 ; i < partcipantListID.size(); i ++) {
             strParticipantIdList += ", " + partcipantListID.get(i);
-            Log.e(TAG,  partcipantListID.get(i) + "Oh ang isang katulad mooooo");
         }
-
-
     }
 
     private List<String> getParticipantListID()
@@ -546,25 +559,63 @@ public class EditMeetingActivity extends AppCompatActivity implements SpectrumPa
         List<String> partcipantListID = new ArrayList<>();
 
         String [] idArray = strParticipantIdList.split(", ");
-        for(int i = 0; i < idArray.length ; i ++)
-        {
-            partcipantListID.add(idArray[i]);
-        }
+        Collections.addAll(partcipantListID, idArray);
         return partcipantListID;
     }
 
     public boolean checkAllInput()
     {
-        if(!(etMeetingName.getText().toString().isEmpty()) &&
+        return !(etMeetingName.getText().toString().isEmpty()) &&
                 !(tvDate.getText().toString().isEmpty()) &&
-
                 !(tvTimefrom.getText().toString().isEmpty()) &&
                 !(tvTimeto.getText().toString().isEmpty()) &&
                 !(tv_selected_location.getText().toString().isEmpty()) &&
-                !(tvGuestList.getText().toString().isEmpty())){
-            return true;
-        }
-        return false;
+                !(tvGuestList.getText().toString().isEmpty());
     }
+
+    //////////////////////////////////////// SMS GENERATION  /////////////////////////////////
+
+    public String generateSMS()
+    {
+
+        Meeting newMeeting = MeetingService.getMeeting(getBaseContext(),
+                (int) meeting.getMeeting_id());
+
+        String sms = "CKMT [EDT] \n\n" +
+                newMeeting.getTitle() + "\n\n" +
+                "Hi! My scheduled meeting with you has been changed. The meeting is now on " +
+                Utils.dateToString(newMeeting.getDate()) + " " +
+                Utils.dateIntegerToString(newMeeting.getStartTime()) + " - " +
+                Utils.dateIntegerToString(newMeeting.getEndTime()) + " at " +
+                newMeeting.getAddress() + "\n\n" +
+                "See you there! \n\n " +
+                "__________" + //10 underscores
+                newMeeting.getDevice_id() + "$&" +
+                newMeeting.getTitle() + "$&" +
+                newMeeting.getDate().toString() + "$&" +
+                newMeeting.getStartTime() + "$&" +
+                newMeeting.getEndTime()  + "$&" +
+                newMeeting.getAddress() + "$&" +
+                newMeeting.getLatitude() + "$&" +
+                newMeeting.getLongitude() + "$&" +
+                newMeeting.getStringParticipants() + "$&" +
+                CreateMeetingActivity.HOSTNAME + "$&" +  /*Change to shared preference shiz*/
+                newMeeting.getColor();
+
+
+        Log.e(TAG, "title = " + meeting.getTitle());
+        Log.e(TAG, "description = " + meeting.getDescription());
+        Log.e(TAG, "date = " + meeting.getDate().toString());
+        Log.e(TAG, "start time = " + meeting.getStartTime());
+        Log.e(TAG, "end time = " + meeting.getEndTime());
+
+        if(!(etMeetingDescription.getText().toString().isEmpty()))
+            sms += "$&" + etMeetingDescription.getText().toString();
+
+        sms += "&&&";
+        return sms;
+    }
+
+
 
 }

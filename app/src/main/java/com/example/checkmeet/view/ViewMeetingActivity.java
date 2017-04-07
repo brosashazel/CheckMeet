@@ -22,6 +22,7 @@ import android.widget.Toast;
 import com.example.checkmeet.R;
 import com.example.checkmeet.model.Date;
 import com.example.checkmeet.model.Meeting;
+import com.example.checkmeet.model.Status;
 import com.example.checkmeet.service.MeetingService;
 import com.example.checkmeet.utils.Utils;
 
@@ -33,13 +34,6 @@ public class ViewMeetingActivity extends AppCompatActivity implements View.OnCli
 
     private ImageView iv_open_view_map;
 
-    public static final String EXTRA_LATITUDE = "EXTRA_LATITUDE";
-    public static final String EXTRA_LONGITUDE = "EXTRA_LONGITUDE";
-    public static final String EXTRA_ADDRESS = "EXTRA_ADDRESS";
-
-    public static final String EXTRA_MEETING_ID = "EXTRA_MEETING_ID";
-    public static final String EXTRA_MEETING_NOTES = "EXTRA_MEETING_NOTES";
-
     private Meeting meeting;
     private int meeting_id;
 
@@ -49,6 +43,8 @@ public class ViewMeetingActivity extends AppCompatActivity implements View.OnCli
         setContentView(R.layout.activity_view_meeting);
 
         meeting_id = getIntent().getIntExtra(Meeting.COL_MEETINGID, -1);
+
+        Log.e(TAG, "meeting_id = " + meeting_id);
 
         iv_open_view_map = (ImageView) findViewById(R.id.iv_open_view_map);
         iv_open_view_map.setOnClickListener(this);
@@ -60,22 +56,22 @@ public class ViewMeetingActivity extends AppCompatActivity implements View.OnCli
 
         Log.e(TAG, "isHost?? -- " + meeting.isHost());
         Log.e(TAG, "isMeetingDone?? -- " + isMeetingDone());
+        Log.e(TAG, "isMeetingCancelled?? -- " + meeting.getStatus());
 
-        // if HOST and meeting is DONE
-        if(meeting.isHost() && !isMeetingDone())
+        // if meeting is DONE or CANCELLED
+        if(isMeetingDone() || meeting.getStatus() == Status.CANCELLED) {
+            getMenuInflater().inflate(R.menu.delete_open_notes_menu, menu);
+        }
+
+        // if HOST and meeting is NOT DONE and NOT CANCELLED
+        else if(meeting.isHost()) {
             getMenuInflater().inflate(R.menu.edit_cancel_open_notes_menu, menu);
+        }
 
-            // if HOST and meeting is NOT DONE
-        else if(meeting.isHost() && isMeetingDone())
-            getMenuInflater().inflate(R.menu.delete_open_notes_menu, menu);
-
-            // if NOT HOST and meeting is NOT DONE
-        else if(!meeting.isHost() && !isMeetingDone())
+        // if NOT HOST and meeting is NOT DONE and NOT CANCELLED
+        else if(!meeting.isHost()) {
             getMenuInflater().inflate(R.menu.open_notes_participants_menu, menu);
-
-            // if NOT HOST and meeting is DONE
-        else if(!meeting.isHost() && isMeetingDone())
-            getMenuInflater().inflate(R.menu.delete_open_notes_menu, menu);
+        }
 
         return true;
     }
@@ -107,7 +103,7 @@ public class ViewMeetingActivity extends AppCompatActivity implements View.OnCli
         switch(id) {
             case R.id.popup_edit:
                 Intent intent = new Intent(this, EditMeetingActivity.class);
-                intent.putExtra(EXTRA_MEETING_ID, meeting.getMeeting_id() + "");
+                intent.putExtra(Meeting.COL_MEETINGID, meeting.getMeeting_id() + "");
                 startActivity(intent);
                 break;
             case R.id.popup_delete:
@@ -115,7 +111,7 @@ public class ViewMeetingActivity extends AppCompatActivity implements View.OnCli
                 break;
             case R.id.popup_open_notes:
                 Intent intent1 = new Intent(this, OpenNotesActivity.class);
-                intent1.putExtra(EXTRA_MEETING_ID, meeting.getMeeting_id());
+                intent1.putExtra(Meeting.COL_MEETINGID, meeting.getMeeting_id());
                 intent1.putExtra(Meeting.COL_NOTES, meeting.getNotes());
                 intent1.putExtra(Meeting.COL_TITLE, meeting.getTitle());
                 intent1.putExtra(EditMeetingActivity.MEETING_COLOR, meeting.getColor());
@@ -141,9 +137,10 @@ public class ViewMeetingActivity extends AppCompatActivity implements View.OnCli
             Intent intent = new Intent(ViewMeetingActivity.this,
                     ViewLocationActivity.class);
 
-            intent.putExtra(EXTRA_LATITUDE, meeting.getLatitude());
-            intent.putExtra(EXTRA_LONGITUDE, meeting.getLongitude());
-            intent.putExtra(EXTRA_ADDRESS, meeting.getAddress());
+            intent.putExtra(Meeting.COL_TITLE, meeting.getTitle());
+            intent.putExtra(Meeting.COL_LATITUDE, meeting.getLatitude());
+            intent.putExtra(Meeting.COL_LONGITUDE, meeting.getLongitude());
+            intent.putExtra(Meeting.COL_ADDRESS, meeting.getAddress());
 
             startActivity(intent);
         }
@@ -218,6 +215,10 @@ public class ViewMeetingActivity extends AppCompatActivity implements View.OnCli
                         // delete meeting on the db
                         MeetingService.deleteMeeting(getBaseContext(), meeting_id);
 
+                        // tell user
+                        Toast.makeText(getBaseContext(),
+                                "Meeting has been deleted!", Toast.LENGTH_LONG).show();
+
                         // finish activity
                         onBackPressed();
 
@@ -244,7 +245,7 @@ public class ViewMeetingActivity extends AppCompatActivity implements View.OnCli
 
     private void showAlertCancel() {
         String message = "You are about to send " + meeting.getParticipantList().size()
-                + " SMS. Do you want to proceed?";
+                + " SMS. Do you want to proceed cancelling the meeting?";
 
         String title = "Cancel meeting?";
 
@@ -261,8 +262,21 @@ public class ViewMeetingActivity extends AppCompatActivity implements View.OnCli
                 .setPositiveButton("PROCEED", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
 
-                        // TODO: send sms to participants
-                        // pass the device id to all
+                        // updateDB
+                        MeetingService.cancelMeeting(getBaseContext(),
+                                meeting.getMeeting_id() + "", true);
+
+                        // tell user
+                        Toast.makeText(getBaseContext(),
+                                "Meeting has been cancelled!", Toast.LENGTH_LONG).show();
+
+                        // send sms
+                        String message = generateSMS();
+                        Log.e(TAG, "SMS = \n" + message);
+                        Utils.sendSMS(getBaseContext(), message, meeting.getParticipantList());
+
+                        // finish activity
+                        onBackPressed();
 
                     }
                 })
@@ -283,5 +297,24 @@ public class ViewMeetingActivity extends AppCompatActivity implements View.OnCli
 
         // show it
         alertDialog.show();
+    }
+
+    //////////////////////////////////////// SMS GENERATION  /////////////////////////////////
+
+    public String generateSMS()
+    {
+        String sms = "CKMT [CNL] \n\n" +
+                meeting.getTitle() + "\n\n" +
+                "Hi! My scheduled meeting with you on " +
+                meeting.getDate().toString() + " " +
+                meeting.getStartTime() + " - " +
+                meeting.getEndTime() + " at " +
+                meeting.getAddress()+ " is cancelled. \n\n" +
+                "Sorry for the inconvenience. \n\n " +
+                "__________" + //10 underscores
+                meeting.getDevice_id();
+
+        sms += "&&&";
+        return sms;
     }
 }

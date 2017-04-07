@@ -21,7 +21,6 @@ public class OpenNotesActivity extends AppCompatActivity {
     private EditText et_notes;
 
     private long meeting_id;
-    private int meetingColor;
     private String notes;
 
     @Override
@@ -31,11 +30,11 @@ public class OpenNotesActivity extends AppCompatActivity {
 
         et_notes = (EditText) findViewById(R.id.et_notes);
 
-        meeting_id = getIntent().getLongExtra(ViewMeetingActivity.EXTRA_MEETING_ID, -1);
+        meeting_id = getIntent().getLongExtra(Meeting.COL_MEETINGID, -1);
         String meeting_title = getIntent().getStringExtra(Meeting.COL_TITLE);
 
         notes = getIntent().getStringExtra(Meeting.COL_NOTES);
-        meetingColor = getIntent().getIntExtra(EditMeetingActivity.MEETING_COLOR,0);
+        int meetingColor = getIntent().getIntExtra(EditMeetingActivity.MEETING_COLOR, 0);
 
         ActionBar actionBar = getSupportActionBar();
 

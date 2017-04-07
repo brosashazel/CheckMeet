@@ -19,6 +19,7 @@ import com.example.checkmeet.R;
 import com.example.checkmeet.adapter.ContactItemClickCallback;
 import com.example.checkmeet.adapter.GroupParticipantsAdapter;
 import com.example.checkmeet.model.Contact;
+import com.example.checkmeet.service.ContactService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +43,6 @@ public class AddGuestsContactsFragment extends Fragment implements ContactItemCl
         // Required empty public constructor
 
     }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -94,55 +94,7 @@ public class AddGuestsContactsFragment extends Fragment implements ContactItemCl
     }
 
     private void initData() {
-        contactList.clear();
-
-        Random rand = new Random();
-        Contact c;
-
-        ContentResolver cr = getContext().getContentResolver();
-        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
-                null, null, null, ContactsContract.Contacts.DISPLAY_NAME);
-
-        if (cur != null && cur.getCount() > 0) {
-            while (cur.moveToNext()) {
-
-                c = new Contact();
-
-                String id = cur.getString(
-                        cur.getColumnIndex(ContactsContract.Contacts._ID));
-                String name = cur.getString(cur.getColumnIndex(
-                        ContactsContract.Contacts.DISPLAY_NAME));
-
-                c.setContactID(id);
-                c.setName(name);
-                c.setColor(colors.get(rand.nextInt(5)));
-                c.setSelected(false);
-
-                if (cur.getInt(cur.getColumnIndex(
-                        ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0) {
-                    Cursor pCur = cr.query(
-                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                            null,
-                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID +" = ?",
-                            new String[]{id}, null);
-                    if (pCur != null && pCur.moveToFirst()) {
-                        String phoneNo = pCur.getString(pCur.getColumnIndex(
-                                ContactsContract.CommonDataKinds.Phone.NUMBER));
-
-                        Log.e(TAG, "Name: " + name
-                                + ", Phone No: " + phoneNo + "\t\tID: " + id);
-
-                        c.setNumber(phoneNo);
-
-                        pCur.close();
-                    }
-                }
-
-                contactList.add(c);
-            }
-
-            cur.close();
-        }
+        contactList = ContactService.getAllContacts(getContext(), colors);
     }
 
     private void parseParticipantListArgument(String participantList) {
@@ -151,8 +103,8 @@ public class AddGuestsContactsFragment extends Fragment implements ContactItemCl
 
             Log.e(TAG, "Parsing Participant List Argument");
 
-            for(int i = 0; i < tokens.length; i ++) {
-                searchContactIfParticipant(tokens[i]);
+            for (String token : tokens) {
+                searchContactIfParticipant(token);
             }
         }
     }

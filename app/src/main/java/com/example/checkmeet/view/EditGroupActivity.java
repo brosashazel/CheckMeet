@@ -23,6 +23,7 @@ import com.example.checkmeet.adapter.ContactListsAdapter;
 import com.example.checkmeet.adapter.GroupParticipantsAdapter;
 import com.example.checkmeet.model.Contact;
 import com.example.checkmeet.model.Group;
+import com.example.checkmeet.service.ContactService;
 import com.example.checkmeet.service.GroupService;
 
 import java.util.ArrayList;
@@ -103,58 +104,16 @@ public class EditGroupActivity extends AppCompatActivity implements ContactItemC
     }
 
     private void initData() {
-        contactList.clear();
 
-        Random rand = new Random();
-        Contact c;
+        // get all contacts
+        contactList = ContactService.getAllContacts(getBaseContext(), colors);
 
-        ContentResolver cr = getBaseContext().getContentResolver();
-        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
-                null, null, null, ContactsContract.Contacts.DISPLAY_NAME);
-
-        if (cur != null && cur.getCount() > 0) {
-            while (cur.moveToNext()) {
-
-                c = new Contact();
-
-                String id = cur.getString(
-                        cur.getColumnIndex(ContactsContract.Contacts._ID));
-                String name = cur.getString(cur.getColumnIndex(
-                        ContactsContract.Contacts.DISPLAY_NAME));
-
-                c.setContactID(id);
-                c.setName(name);
-                c.setColor(colors.get(rand.nextInt(5)));
-                c.setSelected(isParticipant(id));
-
-                if(c.isSelected()) {
-                    participant_id_list.add(c.getContactID());
-                }
-
-                if (cur.getInt(cur.getColumnIndex(
-                        ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0) {
-                    Cursor pCur = cr.query(
-                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                            null,
-                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID +" = ?",
-                            new String[]{id}, null);
-                    if (pCur != null && pCur.moveToFirst()) {
-                        String phoneNo = pCur.getString(pCur.getColumnIndex(
-                                ContactsContract.CommonDataKinds.Phone.NUMBER));
-
-                        Log.e(TAG, "Name: " + name
-                                + ", Phone No: " + phoneNo + "\t\tID: " + id);
-
-                        c.setNumber(phoneNo);
-
-                        pCur.close();
-                    }
-                }
-
-                contactList.add(c);
+        // filter contacts
+        for(int i = 0; i < contactList.size(); i ++) {
+            if(isParticipant(contactList.get(i).getContactID())) {
+                contactList.get(i).setSelected(true);
+                participant_id_list.add(contactList.get(i).getContactID());
             }
-
-            cur.close();
         }
     }
 

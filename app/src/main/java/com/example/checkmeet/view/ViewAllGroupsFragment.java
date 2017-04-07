@@ -53,43 +53,7 @@ public class ViewAllGroupsFragment extends Fragment implements GroupItemClickCal
     }
 
     private void initData() {
-
         cursor = GroupService.getAllGroups(getContext());
-
-//        this.groupList = new ArrayList<>();
-//        ArrayList<Contact> contactList = new ArrayList<>();
-//
-//        List<Integer> colors = new ArrayList<>();
-//        colors.add(Color.parseColor("#ce93d8"));
-//        colors.add(Color.parseColor("#90caf9"));
-//        colors.add(Color.parseColor("#ffcc80"));
-//        colors.add(Color.parseColor("#a5d6a7"));
-//        colors.add(Color.parseColor("#ffd54f"));
-//
-//        Random rand = new Random();
-//        Contact c;
-//
-//        c = new Contact("Hazel Anne Brosas", "09111111111", colors.get(rand.nextInt(5)));
-//        contactList.add(c);
-//        c = new Contact("Nicolle Magpale", "09999999999", colors.get(rand.nextInt(5)));
-//        contactList.add(c);
-//        c = new Contact("Maria Victoria Reccion", "09222222222", colors.get(rand.nextInt(5)));
-//        contactList.add(c);
-//        c = new Contact("Courtney Anne Ngo", "09777777777", colors.get(rand.nextInt(5)));
-//        contactList.add(c);
-//
-//        Group g;
-//
-//        g = new Group(1, "Group 1", contactList);
-//        groupList.add(g);
-//        g = new Group(2, "Group 2", contactList);
-//        groupList.add(g);
-//        g = new Group(3, "Group 3", contactList);
-//        groupList.add(g);
-//        g = new Group(4, "Group 4", contactList);
-//        groupList.add(g);
-//        g = new Group(5, "Group 5", contactList);
-//        groupList.add(g);
     }
 
     @Override
@@ -99,6 +63,11 @@ public class ViewAllGroupsFragment extends Fragment implements GroupItemClickCal
         // get cursor from db
         Cursor cursor = GroupService.getAllGroups(getContext());
 
+        // will close the old cursor for you
+        adapter.changeCursor(cursor);
+
+        Log.e(TAG, "item count = " + adapter.getItemCount());
+
         // check first if there are groups
         // if yes, show list
         // if not, show error
@@ -106,12 +75,6 @@ public class ViewAllGroupsFragment extends Fragment implements GroupItemClickCal
             recView.setVisibility(View.GONE);
             tv_no_groups_found.setVisibility(View.VISIBLE);
         } else {
-
-            // will close the old cursor for you
-            adapter.changeCursor(cursor);
-
-            Log.e(TAG, "item count = " + adapter.getItemCount());
-
             recView.setVisibility(View.VISIBLE);
             tv_no_groups_found.setVisibility(View.GONE);
         }
